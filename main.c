@@ -489,6 +489,8 @@ void affichage(){
   if (abs(angle)>=360)
     angle=0;
   */
+  
+  printf("x:%f y:%f z:%f\n",(p1.x+p2.x)/2,(p1.y+p2.y)/2,(p1.z+p2.z)/2);
     
   gestion_input();
 
