@@ -2,6 +2,9 @@
 #include "float3.h"
 #define BLEU 1
 #define GRIS 2
+// Variables detection collision
+float r_sphere_joueur;
+
 // Variables décors
 int nuages;
 float tab_arbre[500][2];
@@ -364,6 +367,8 @@ void dessin_grille(){
   p=rand()%100;
   if ( p < 25) nuages ++;
   if (nuages>497) nuages=0;
+
+  nuages=0;
   
   for ( j = 0; j < bS; j+=pas ){
 
@@ -620,9 +625,12 @@ void affichage(){
   if (abs(angle)>=360)
     angle=0;
   */
-  
+
+  // Detection des collisions basique
+  if((p1.z+p2.z)/2<=tab_decors[(int)(p1.x+p2.x)/2][(int)(p1.y+p2.y)/2])
   printf("x:%f y:%f z:%f\n",(p1.x+p2.x)/2,(p1.y+p2.y)/2,(p1.z+p2.z)/2);
-    
+  else printf("\n");
+  
   gestion_input();
 
   float3 centre_cube;
@@ -904,6 +912,8 @@ void mountain(int i_e, int j_e, int largeur){
   
 int main(int argc, char**argv){
   //INITIALISATION
+
+  r_sphere_joueur=5;
   int i,j,y;
   float3 init; init.x=-5000;
   for( i=0;i<50;i++)
