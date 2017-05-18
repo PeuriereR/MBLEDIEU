@@ -4,6 +4,7 @@
 #include "GL/gl.h"
 #include "GL/glut.h"
 #include <math.h>
+#include <time.h>
 
 #define K 8
 
