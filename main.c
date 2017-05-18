@@ -244,13 +244,29 @@ void dessin_arbre2(){
 }
 
 void dessin_arbre(){
-    int i;
+  int i,j;
   if (arbre==1){
-    for(i=0; i<250; i++){
+    for(i=0; i<200; i++){
       tab_arbre[i][0]=rand()%490+1;
       tab_arbre[i][1]=rand()%490+1;
 
-      fprintf(stderr,"ici la hauteur : %f \n",tab_decors[(int)tab_arbre[i][0]][(int)tab_arbre[i][1]]);
+    }
+    int indice=100;
+    for(i=0; i<30; i++){// 10*15
+      int randx=rand()%490+1;
+      int randy=rand()%490+1;
+      tab_arbre[indice][0]=randx;
+      tab_arbre[indice][1]=randy;
+      indice++;
+      for(j=0;j<20;j++){
+	int signe=rand()%2-1;
+	if (signe==0) signe=1;
+	tab_arbre[indice][0]=clamp_min_max(randx+signe*rand()%30,10,490);
+	signe=rand()%2-1;
+	if (signe==0) signe=1;
+	tab_arbre[indice][1]=clamp_min_max(randy+signe*rand()%30,10,490);
+	indice++;
+      }
     }
     arbre++;
   }
@@ -362,7 +378,7 @@ void dessin_grille(){
 
   //Animation nuages
   p=rand()%100;
-  if ( p < 25) nuages ++;
+  if ( p < 85) nuages ++;
   if (nuages>497) nuages=0;
   
   for ( j = 0; j < bS; j+=pas ){
@@ -382,7 +398,7 @@ void dessin_grille(){
       // changement couleurs (nuages )
       c = mapFloat(tab_decors[(i+nuages)%497][(j+nuages)%497],0,5,0,1);
       glColor3f(c,c,c);
-	    //  glColor3f(.8,.8,.8);
+      //  glColor3f(.8,.8,.8);
       
       glVertex3f(i, j+pas, tab_decors[i][j+pas]);
       glVertex3f(i+pas, j, tab_decors[i+pas][j]);
@@ -610,14 +626,14 @@ void affichage_pt(float3 p1){
 void affichage(){
   int i,j;
   /*
-  angle_tangage=angle_tangage+0.2;
-  if (abs(angle_tangage)>=360)
+    angle_tangage=angle_tangage+0.2;
+    if (abs(angle_tangage)>=360)
     angle_tangage=0;
 
 
-  angle=angle+0.2;
+    angle=angle+0.2;
     
-  if (abs(angle)>=360)
+    if (abs(angle)>=360)
     angle=0;
   */
     
@@ -634,7 +650,7 @@ void affichage(){
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glLoadIdentity();
   
-   glFrustum(-10,10,-10,10,10,10000);
+  glFrustum(-10,10,-10,10,10,10000);
   //gluPerspective(100,1,0.1,1000);
   gluLookAt(centre_cube.x-30*V_DIR.x +  V_UP.x*8 ,
 	    centre_cube.y-30*V_DIR.y +  V_UP.y*8 ,
@@ -647,16 +663,16 @@ void affichage(){
 	    V_UP.z
 	    );
   /*
-  gluLookAt(centre_cube.x-30*V_DIR.x +  V_UP.x*8 ,
-	    centre_cube.y-30*V_DIR.y +  V_UP.y*8 ,
-	    centre_cube.z-30*V_DIR.z +  V_UP.z*8 ,
-	    centre_cube.x+10*V_DIR.x,
-	    centre_cube.y+10*V_DIR.y,
-	    centre_cube.z+10*V_DIR.z,
-	    V_UP.x,
-	    V_UP.y,
-	    V_UP.z
-	    );
+    gluLookAt(centre_cube.x-30*V_DIR.x +  V_UP.x*8 ,
+    centre_cube.y-30*V_DIR.y +  V_UP.y*8 ,
+    centre_cube.z-30*V_DIR.z +  V_UP.z*8 ,
+    centre_cube.x+10*V_DIR.x,
+    centre_cube.y+10*V_DIR.y,
+    centre_cube.z+10*V_DIR.z,
+    V_UP.x,
+    V_UP.y,
+    V_UP.z
+    );
   */  
   
   //gluLookAt(-70,-20,70,10,50,10,0,0,1);
@@ -668,15 +684,16 @@ void affichage(){
       if (distance_point(tab_proj[i][1],p1)>1000)
 	tab_proj[i][0].x=-5000;
       else{
-	tab_proj[i][1].x+=tab_proj[i][0].x;
-	tab_proj[i][1].y+=tab_proj[i][0].y;
-	tab_proj[i][1].z+=tab_proj[i][0].z;
+	tab_proj[i][1].x+=5*tab_proj[i][0].x;
+	tab_proj[i][1].y+=5*tab_proj[i][0].y;
+	tab_proj[i][1].z+=5*tab_proj[i][0].z;
        
-	tab_proj[i][2].x+=tab_proj[i][0].x;
-	tab_proj[i][2].y+=tab_proj[i][0].y;
-	tab_proj[i][2].z+=tab_proj[i][0].z;
+	tab_proj[i][2].x+=5*tab_proj[i][0].x;
+	tab_proj[i][2].y+=5*tab_proj[i][0].y;
+	tab_proj[i][2].z+=5*tab_proj[i][0].z;
 
 	affiche_cube_plein(tab_proj[i][1],tab_proj[i][2],1);
+	tab_proj[i][0].z-=0.01;
       }
   }
   
@@ -735,7 +752,7 @@ void affichage(){
 
   
   // ROTATION ET AFFICHAGE DU CUBE
-
+  
   glPushMatrix();
   
   glTranslatef((p1.x+p2.x)/2,(p1.y+p2.y)/2,(p1.z+p2.z)/2);
@@ -743,29 +760,29 @@ void affichage(){
   glRotatef(angle_tangage,V_90.x,V_90.y,V_90.z);
   glTranslatef(-(p1.x+p2.x)/2,-(p1.y+p2.y)/2,-(p1.z+p2.z)/2);
    
- affiche_cube(p1,p2);
+  affiche_cube(p1,p2);
   
   glPopMatrix();
   /*
-  affiche_cube_plein(p1_hyperC,p2_hyperC,1);
+    affiche_cube_plein(p1_hyperC,p2_hyperC,1);
 
   
-     glPushMatrix();
+    glPushMatrix();
   
-     glTranslatef((p1.x+p2.x)/2,(p1.y+p2.y)/2,(p1.z+p2.z)/2);
-     glRotatef(angle,V_90.x,V_90.y,V_90.z);
-     glRotatef(angle_tangage,V_UP.x,V_UP.y,V_UP.z);
-     glTranslatef(-(p1.x+p2.x)/2,-(p1.y+p2.y)/2,-(p1.z+p2.z)/2);
+    glTranslatef((p1.x+p2.x)/2,(p1.y+p2.y)/2,(p1.z+p2.z)/2);
+    glRotatef(angle,V_90.x,V_90.y,V_90.z);
+    glRotatef(angle_tangage,V_UP.x,V_UP.y,V_UP.z);
+    glTranslatef(-(p1.x+p2.x)/2,-(p1.y+p2.y)/2,-(p1.z+p2.z)/2);
   
-     affiche_cube_plein(p1_hyperC2,p2_hyperC2,0.1);
-     affiche_cube(p1_hyperC2,p2_hyperC2);
+    affiche_cube_plein(p1_hyperC2,p2_hyperC2,0.1);
+    affiche_cube(p1_hyperC2,p2_hyperC2);
   
-     glPopMatrix();
+    glPopMatrix();
 
 
-  */
   
-  /*
+  
+  
     glPushMatrix();
   
     glTranslatef((p1.x+p2.x)/2,(p1.y+p2.y)/2,(p1.z+p2.z)/2);
@@ -773,7 +790,7 @@ void affichage(){
     glRotatef(-angle_tangage,V_90.x,V_90.y,V_90.z);
     glTranslatef(-(p1.x+p2.x)/2,-(p1.y+p2.y)/2,-(p1.z+p2.z)/2);
   
-    affiche_cube_plein(p1_hyperC,p2_hyperC);
+    affiche_cube_plein(p1_hyperC,p2_hyperC,1);
   
     glPopMatrix();
   */
@@ -950,7 +967,7 @@ int main(int argc, char**argv){
   for ( i =0 ; i<30 ; i++){
     mountain(rand()%500,rand()%500,30);
 
-    }
+  }
   //mountain(5,5,20);
   //mountain(45,45,20);
   // crevasse
