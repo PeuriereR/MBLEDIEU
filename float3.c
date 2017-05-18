@@ -26,6 +26,10 @@ float distance_point(float3 p1, float3 p2){
 float produit_scalaire(float3 p1, float3 p2){
   return (p1.x * p2.x + p1.y * p2.y + p1.z * p2.z);
 }
+float norme(float3 f){
+  float3 origine=init_float3(0,0,0);
+  return distance_point(f,origine);
+}
 
 float3 produit_vectoriel(float3 v1, float3 v2){
   float3 pv;
