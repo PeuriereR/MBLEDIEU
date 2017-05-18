@@ -23,7 +23,6 @@ float3 p1;
 float3 p2;
 float3 p1_hyperC,p2_hyperC;
 float3 p1_hyperC2,p2_hyperC2;
-float3 POINT_ACTUEL;
 
 float3 V_DIR;
 float3 V_90;
@@ -163,9 +162,9 @@ void dessin_grille(){
   int borneInf = -99;
   int borneSup = 99;
 
-  int bS=500;
+  int bS=497;
   float c;
-  int pas = 3;
+  int pas = 2;
   int p;
   int i,j;
   //  t=0;
@@ -176,7 +175,7 @@ void dessin_grille(){
   //Animation nuages
   p=rand()%100;
   if ( p < 25) nuages ++;
-  if (nuages>200) nuages=0;
+  if (nuages>497) nuages=0;
   
   for ( j = 0; j < bS; j+=pas ){
 
@@ -184,8 +183,8 @@ void dessin_grille(){
     for ( i = 0; i < bS; i+=pas ){
 
       // changement couleurs( nuages )
-      c = mapFloat(tab_decors[clamp(abs(i+nuages))%10][clamp(abs(j+nuages))%10],0,5,0,1);
-            glColor3f(c,c,c);
+      c = mapFloat(tab_decors[(i+nuages)%497][(j+nuages)%497],0,5,0,1);
+      glColor3f(c,c,c);
       // glColor3f(.5,.5,.5);
       
       glVertex3f(i, j, tab_decors[i][j]);
@@ -193,8 +192,8 @@ void dessin_grille(){
       glVertex3f(i+pas, j, tab_decors[i+pas][j]);
 
       // changement couleurs (nuages )
-       c = mapFloat(tab_decors[clamp(abs(i+nuages+1))%10][clamp(abs(j+nuages+1))%10],0,5,0,1);
-            glColor3f(c,c,c);
+      c = mapFloat(tab_decors[(i+nuages)%497][(j+nuages)%497],0,5,0,1);
+      glColor3f(c,c,c);
 	    //  glColor3f(.8,.8,.8);
       
       glVertex3f(i, j+pas, tab_decors[i][j+pas]);
@@ -368,10 +367,6 @@ void gestion_input(){
 
   
   if (key_s == 1) {
-    // MAJ DU POINT D'AFFICHAGE DU VECTEUR DIRECTION (p1.x+p2.x/2 p1.y p1.z)
-
-    POINT_ACTUEL.z-=V_DIR.z;
-    POINT_ACTUEL.x-=V_DIR.x;
 
     // MAJ DU CUBE
     
@@ -384,11 +379,7 @@ void gestion_input(){
     p2.y-=V_DIR.y;
   }
   if (key_z == 1){
-    // MAJ DU POINT D'AFFICHAGE DU VECTEUR DIRECTION (p1.x+p2.x/2 p1.y p1.z)
-    
-    POINT_ACTUEL.z+=V_DIR.z;
-    POINT_ACTUEL.x+=V_DIR.x;
-
+ 
     // MAJ DU CUBE
     
     p1.x+=V_DIR.x;
@@ -410,18 +401,16 @@ void gestion_input(){
 
     /* FORMULE DE RODRIGUES */
     /* Rotation autour de l'axe UP du VECTEUR_DIR*/
-    V_DIR=rodrigues(0.2,V_DIR,V_UP);
+    V_DIR=rodrigues(.2,V_DIR,V_UP);
     /* On reactualise le V_90 */
     V_90=produit_vectoriel(V_DIR,V_UP);
  
   }
   if (key_d == 1){
     // ROTATION: Angle_tangage
-
-    float3 save_V90=V_90;
     angle=angle-0.2;
-    if (angle<=-360)
-      angle=0;
+    if (angle<=0)
+      angle=360;
 
     V_DIR=rodrigues(-0.2,V_DIR,V_UP);
     /* On reactualise le V_90 */
@@ -489,6 +478,7 @@ void affichage_pt(float3 p1){
 
 void affichage(){
   int i,j;
+  /*
   angle_tangage=angle_tangage+0.2;
   if (abs(angle_tangage)>=360)
     angle_tangage=0;
@@ -498,7 +488,7 @@ void affichage(){
     
   if (abs(angle)>=360)
     angle=0;
-
+  */
     
   gestion_input();
 
@@ -515,9 +505,28 @@ void affichage(){
   
    glFrustum(-10,10,-10,10,10,10000);
   //gluPerspective(100,1,0.1,1000);
-  gluLookAt(  centre_cube.x-30*V_DIR.x +  V_UP.x*8 ,centre_cube.y-30*V_DIR.y +  V_UP.y*8 ,centre_cube.z-30*V_DIR.z +  V_UP.z*8 ,
-	      centre_cube.x+10*V_DIR.x,centre_cube.y+10*V_DIR.y,centre_cube.z+10*V_DIR.z,
-	      V_UP.x, V_UP.y, V_UP.z);
+  gluLookAt(centre_cube.x-30*V_DIR.x +  V_UP.x*8 ,
+	    centre_cube.y-30*V_DIR.y +  V_UP.y*8 ,
+	    centre_cube.z-30*V_DIR.z +  V_UP.z*8 ,
+	    centre_cube.x,
+	    centre_cube.y,
+	    centre_cube.z,
+	    V_UP.x,
+	    V_UP.y,
+	    V_UP.z
+	    );
+  /*
+  gluLookAt(centre_cube.x-30*V_DIR.x +  V_UP.x*8 ,
+	    centre_cube.y-30*V_DIR.y +  V_UP.y*8 ,
+	    centre_cube.z-30*V_DIR.z +  V_UP.z*8 ,
+	    centre_cube.x+10*V_DIR.x,
+	    centre_cube.y+10*V_DIR.y,
+	    centre_cube.z+10*V_DIR.z,
+	    V_UP.x,
+	    V_UP.y,
+	    V_UP.z
+	    );
+  */  
   
   //gluLookAt(-70,-20,70,10,50,10,0,0,1);
 
@@ -592,18 +601,18 @@ void affichage(){
   
   // ROTATION ET AFFICHAGE DU CUBE
 
-  /*
+  
   glPushMatrix();
   
   glTranslatef((p1.x+p2.x)/2,(p1.y+p2.y)/2,(p1.z+p2.z)/2);
   glRotatef(angle,V_UP.x,V_UP.y,V_UP.z);
   glRotatef(angle_tangage,V_90.x,V_90.y,V_90.z);
   glTranslatef(-(p1.x+p2.x)/2,-(p1.y+p2.y)/2,-(p1.z+p2.z)/2);
-  */ 
+   
  affiche_cube(p1,p2);
   
- /* glPopMatrix();
-
+  glPopMatrix();
+  /*
   affiche_cube_plein(p1_hyperC,p2_hyperC,1);
 
   
@@ -749,12 +758,8 @@ int main(int argc, char**argv){
   V_DIR.y=0;
   V_DIR.z=0;
   
-  POINT_ACTUEL.x=10;
-  POINT_ACTUEL.y=5;
-  POINT_ACTUEL.z=0;
-  
   V_90.x = 0;
-  V_90.y = -1;
+  V_90.y = 1;
   V_90.z = 0;
   
   V_UP.x=0;
@@ -773,7 +778,6 @@ int main(int argc, char**argv){
       rand_seed=rand()%30+1;
 
       tab_decors[i][j]=mapFloat((rand()/rand_seed)%5,0,5,-10,20);
-        printf("%f ",tab_decors[i][j]);
     }
   }
 
