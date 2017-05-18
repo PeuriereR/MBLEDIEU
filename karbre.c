@@ -22,18 +22,20 @@ void kAfficher(karbre a){
 }
 
 void kAfficher2(karbre a, int prof, int fils){
-    for(int i=0;i<prof;i++)
-      printf("\t");
+  int i;
+  for( i=0;i<prof;i++)
+    printf("\t");
   printf("%d",a->vide);
   
   printf("\n");
-  for(int i=0; i<K; i++){
+  for( i=0; i<K; i++){
     if(a->fils[i]!=NULL)
       kAfficher2(a->fils[i],prof+1,i);
   }
 }
 
 karbre kConsArbre(element e,...){
+  int i;
   karbre k=kArbreVide();
   
   va_list params; // pointeur liste param
@@ -41,7 +43,7 @@ karbre kConsArbre(element e,...){
 
   k->vide=e;
   
-  for (int i = 0 ; i < K ; i++) {
+  for ( i = 0 ; i < K ; i++) {
     // récupérer le paramètre suivant de la liste
     karbre valeur_suiv=va_arg(params,karbre);
     k->fils[i]=valeur_suiv;

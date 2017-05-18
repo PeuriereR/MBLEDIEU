@@ -1,5 +1,4 @@
-CC=gcc
-OPTIONS=-Wall -ansi -g 
+OPTIONS=-g -Wall -std=c99 
 GLUT=-lglut -lGLU -lGL -lm
 
 all: proj
