@@ -4,7 +4,7 @@
 #define GRIS 2
 // Variables décors
 int nuages;
-float tab_arbre[50][2];
+float tab_arbre[500][2];
 float tab_decors[500][500];
 int rand_seed;
 
@@ -247,9 +247,9 @@ void dessin_arbre2(){
 void dessin_arbre(){
     int i;
   if (arbre==1){
-    for(i=0; i<50; i++){
-      tab_arbre[i][0]=rand()%200;
-      tab_arbre[i][1]=rand()%200;
+    for(i=0; i<250; i++){
+      tab_arbre[i][0]=rand()%490+1;
+      tab_arbre[i][1]=rand()%490+1;
 
       fprintf(stderr,"ici la hauteur : %f \n",tab_decors[(int)tab_arbre[i][0]][(int)tab_arbre[i][1]]);
     }
@@ -257,21 +257,13 @@ void dessin_arbre(){
   }
   else{
 
-    for(i=0; i<50; i++){
+    for(i=0; i<250; i++){
 	
       glPushMatrix();
-      glScalef(0.5,.5,.5);
       glTranslatef(tab_arbre[i][0],tab_arbre[i][1],tab_decors[(int)tab_arbre[i][0]][(int)tab_arbre[i][1]]);
+      glScalef(0.5,.5,.5);
       dessin_arbre2();
       glPopMatrix();
-      float3 f1,f2,f3;
-      f1.x=tab_arbre[i][0];
-      f2.x=tab_arbre[i][0]+5;
-      f1.y=tab_arbre[i][1];
-      f2.y=tab_arbre[i][1]+5;
-      f1.z=tab_decors[(int)tab_arbre[i][0]][(int)tab_arbre[i][1]];
-      f2.z=tab_decors[(int)tab_arbre[i][0]][(int)tab_arbre[i][1]]+5;
-      affiche_cube_plein(f1,f2,1);
     }
 
   }
@@ -373,7 +365,7 @@ void dessin_grille(){
   p=rand()%100;
   if ( p < 25) nuages ++;
   if (nuages>200) nuages=0;
-  
+  nuages=0;
   for ( j = 0; j < bS; j+=pas ){
 
     glBegin(GL_TRIANGLE_STRIP);
@@ -874,14 +866,18 @@ void keyPressed (unsigned char key, int x, int y) {
 
 }
 
-void mountain(int i_e, int j_e){
+void mountain(int i_e, int j_e, int largeur){
   int i,j;
-  for ( i = 20 ; i > 0 ;i-- )
-    for ( j = 20 ; j > 0 ;j-- ){
-      tab_decors[i_e+i][j_e+j] +=20-((i+j)/2);
-      tab_decors[i_e+i][j_e-j] +=20-((i+j)/2);
-      tab_decors[i_e-i][j_e-j] +=20-((i+j)/2);
-      tab_decors[i_e-i][j_e+j] +=20-((i+j)/2);
+  for ( i = largeur ; i > 0 ;i-- )
+    for ( j = largeur ; j > 0 ;j-- ){
+      if(tab_decors[clamp_min_max(i_e+i,0,500)][clamp_min_max(j_e+j,0,500)]+largeur<50)
+	tab_decors[clamp_min_max(i_e+i,0,500)][clamp_min_max(j_e+j,0,500)] +=largeur-((i+j)/2);
+      if(tab_decors[clamp_min_max(i_e+i,0,500)][clamp_min_max(j_e-j,0,500)]+largeur<50)
+	tab_decors[clamp_min_max(i_e+i,0,500)][clamp_min_max(j_e-j,0,500)] +=largeur-((i+j)/2);
+      if( tab_decors[clamp_min_max(i_e-i,0,500)][clamp_min_max(j_e-j,0,500)]+largeur<50)
+	tab_decors[clamp_min_max(i_e-i,0,500)][clamp_min_max(j_e-j,0,500)] +=largeur-((i+j)/2);
+      if( tab_decors[clamp_min_max(i_e-i,0,500)][clamp_min_max(j_e-j,0,500)]+largeur<50)
+	tab_decors[clamp_min_max(i_e-i,0,500)][clamp_min_max(j_e+j,0,500)] +=largeur-((i+j)/2);
     }
 
 }
@@ -947,13 +943,17 @@ int main(int argc, char**argv){
   for ( i = 0 ; i < 500 ;i++ )
     tab_decors[i][150] = -50;
   
+  
+  for ( i =0 ; i<30 ; i++){
+    mountain(rand()%500,rand()%500,30);
 
-  mountain(25,25);
-  mountain(45,45);
+    }
+  //mountain(5,5,20);
+  //mountain(45,45,20);
   // crevasse
 
   
-  for (  i = 0 ; i < 4 ; i++)   aplanir();
+  for (  i = 0 ; i < 16; i++)   aplanir();
 
   
   fprintf(stderr,"VECT: %f %f %f \n",V_UP.x,V_UP.y,V_UP.z);
