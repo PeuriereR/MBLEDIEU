@@ -10,7 +10,8 @@ int nuages;
 float tab_arbre[500][2];
 float tab_decors[500][500];
 int rand_seed;
-
+int nuages_toggle=1;
+int auto_scroll_toggle=1;
 int arbre=1;
 
 // Variables d'animation
@@ -33,7 +34,8 @@ float3 p1_hyperC2,p2_hyperC2;
 float3 V_DIR;
 float3 V_90;
 float3 V_UP;
-
+float3 V_UP_INIT;
+float3 V_90_INIT;
 float3 tab_proj[50][3];
 
 
@@ -368,6 +370,7 @@ void dessin_grille(){
   if ( p < 25) nuages ++;
   if (nuages>497) nuages=0;
 
+  if (!nuages_toggle)
   nuages=0;
   
   for ( j = 0; j < bS; j+=pas ){
@@ -489,6 +492,7 @@ void projectile(float3 direction,float3 m1, float3 m2){
 
 void gestion_input(){
   /* Solution patarasse pour empecher la destruction des vecteurs */
+  /*
   if (key_d == 1 && key_p == 1)
     key_d=2;
   
@@ -500,7 +504,9 @@ void gestion_input(){
   
   if (key_q == 1 && key_m == 1)
     key_q=2;
+  */
 
+  float d_angle=.5;
   
   if (key_s == 1) {
 
@@ -530,27 +536,29 @@ void gestion_input(){
   if (key_q == 1){
     // ROTATION: Angle de -4
     
-    angle=angle+0.2;
+    //   angle=angle+d_angle;
     
     if (angle>=360)
       angle=0;
 
     /* FORMULE DE RODRIGUES */
-    /* Rotation autour de l'axe UP du VECTEUR_DIR*/
-    V_DIR=rodrigues(.2,V_DIR,V_UP);
-    /* On reactualise le V_90 */
-    V_90=produit_vectoriel(V_DIR,V_UP);
+    /* Rotation autour de l'axe DIR du VECTEUR_90*/
+      V_90=rodrigues(-.8,V_90,V_DIR);
+    /* On reactualise le V_UP */
+    V_UP=produit_vectoriel(V_DIR,V_90);
  
   }
   if (key_d == 1){
     // ROTATION: Angle_tangage
-    angle=angle-0.2;
+    /*
+    angle=angle-d_angle;
     if (angle<=0)
       angle=360;
-
-    V_DIR=rodrigues(-0.2,V_DIR,V_UP);
-    /* On reactualise le V_90 */
-    V_90=produit_vectoriel(V_DIR,V_UP);
+    */
+    /* Rotation autour de l'axe DIR du VECTEUR_90*/
+      V_90=rodrigues(.8,V_90,V_DIR);
+    /* On reactualise le V_UP */
+    V_UP=produit_vectoriel(V_DIR,V_90);
     
     /*
       if (save_V90.x* V_UP.x+save_V90.y* V_UP.y+ save_V90.z* V_UP.z < cos(M_PI/180)){
@@ -565,22 +573,13 @@ void gestion_input(){
       p1.z-=0.5;
       p2.z-=0.5;
     
-    */
+    
     angle_tangage=angle_tangage-0.2;
     if (angle_tangage<=-360)
       angle_tangage=0;
-
-    float3 save_PV=V_UP;
-    
-    V_DIR=rodrigues(-0.2,V_DIR,V_90);
+    */
+    V_DIR=rodrigues(-0.8,V_DIR,V_90);
     V_UP=produit_vectoriel(V_DIR,V_90);
-    /* Pour contrer le renversement du vecteur par double produit vectoriel */
-    if (save_PV.x* V_UP.x+save_PV.y* V_UP.y+ save_PV.z* V_UP.z < cos(M_PI/180)){
-      V_UP.x=- V_UP.x;
-      V_UP.y=- V_UP.y;
-      V_UP.z=- V_UP.z;
-    }
-  
   }
   
   if (key_p == 1){
@@ -588,22 +587,23 @@ void gestion_input(){
       p1.z+=0.5;
       p2.z+=0.5;
     */
-    
+    /*
     angle_tangage=angle_tangage+0.2;
     if (angle_tangage>=360)
       angle_tangage=0;
 
     float3 save_PV=V_UP;
-    
-    V_DIR=rodrigues(0.2,V_DIR,V_90);
+    */
+    V_DIR=rodrigues(0.8,V_DIR,V_90);
     V_UP=produit_vectoriel(V_DIR,V_90);/*    
 					     /* Pour contrer le renversement du vecteur par double produit vectoriel */
+    /*
     if (save_PV.x* V_UP.x+save_PV.y* V_UP.y+ save_PV.z* V_UP.z < cos(M_PI/180)){
       V_UP.x=- V_UP.x;
       V_UP.y=- V_UP.y;
       V_UP.z=- V_UP.z;
     }
-   
+    */
   }
   glutPostRedisplay();
 }
@@ -627,10 +627,11 @@ void affichage(){
   */
 
   // Detection des collisions basique
+  /*
   if((p1.z+p2.z)/2<=tab_decors[(int)(p1.x+p2.x)/2][(int)(p1.y+p2.y)/2])
   printf("x:%f y:%f z:%f\n",(p1.x+p2.x)/2,(p1.y+p2.y)/2,(p1.z+p2.z)/2);
   else printf("\n");
-  
+  */
   gestion_input();
 
   float3 centre_cube;
@@ -699,9 +700,10 @@ void affichage(){
 
   
   glColor4f(1,0,0.5,0.5);
+  
   glVertex3f( 0,0,0);
   glVertex3f(V_90.x*100,V_90.y*100,V_90.z*100);
-    
+  
   glColor4f(0,1,1,0.5);
   glVertex3f( 0,0,0);
   glVertex3f( V_UP.x*100, V_UP.y*100, V_UP.z*100);
@@ -711,6 +713,27 @@ void affichage(){
   glVertex3f( 0,0,0);
   glVertex3f( V_DIR.x*100, V_DIR.y*100, V_DIR.z*100);
 
+
+    
+  // printf("centre_cube.x : %f  ,centre_cube.y  %f  ,centre_cube.z  %f  \n",centre_cube.x,centre_cube.y,centre_cube.z);
+
+  int val = 0;
+  
+  glColor4f(1,0,0,0.5);
+  glVertex3f( centre_cube.x-val,centre_cube.y-val,centre_cube.z-val);
+  glVertex3f( centre_cube.x+V_DIR.x*10-val,centre_cube.y+V_DIR.y*10-val,centre_cube.z+V_DIR.z*10-val);
+
+  glColor4f(0,1,0,0.5);
+  glVertex3f(centre_cube.x-V_90.x*5,centre_cube.y-V_90.y*5,centre_cube.z-V_90.z*5);
+  glVertex3f(centre_cube.x+V_90.x*5,centre_cube.y+V_90.y*5,centre_cube.z+V_90.z*5);
+  /*
+  glVertex3f(centre_cube.x-val,centre_cube.y-val,centre_cube.z-val);
+  glVertex3f(centre_cube.x+V_90.x*10-val,centre_cube.y+V_90.y*10-val,centre_cube.z+V_90.z*10-val);
+  */
+  
+  glColor4f(0,0,1,0.5);
+  glVertex3f( centre_cube.x-val,centre_cube.y-val,centre_cube.z-val);
+  glVertex3f( centre_cube.x+V_UP.x*10-val,centre_cube.y+ V_UP.y*10-val,centre_cube.z+ V_UP.z*10-val);
 
   glEnd();
   
@@ -749,11 +772,18 @@ void affichage(){
   glPushMatrix();
   
   glTranslatef((p1.x+p2.x)/2,(p1.y+p2.y)/2,(p1.z+p2.z)/2);
-  glRotatef(angle,V_UP.x,V_UP.y,V_UP.z);
-  glRotatef(angle_tangage,V_90.x,V_90.y,V_90.z);
+  /*
+    glRotatef(angle,V_UP.x,V_UP.y,V_UP.z);
+    glRotatef(angle_tangage,V_90.x,V_90.y,V_90.z);
+  */
+  /*
+  glRotatef(angle,V_UP_INIT.x,V_UP_INIT.y,V_UP_INIT.z);
+  glRotatef(angle_tangage,V_90_INIT.x,V_90_INIT.y,V_90_INIT.z);
+  */
+  
   glTranslatef(-(p1.x+p2.x)/2,-(p1.y+p2.y)/2,-(p1.z+p2.z)/2);
    
- affiche_cube(p1,p2);
+  //affiche_cube(p1,p2);
   
   glPopMatrix();
   /*
@@ -825,7 +855,18 @@ void affichage(){
   
     glEnd();
   */
+  if (auto_scroll_toggle)
+  {
+p2.x+=.5*V_DIR.x;
+p2.y+=.5*V_DIR.y;
+p2.z+=.5*V_DIR.z;
 
+ 
+p1.x+=.5*V_DIR.x;
+p1.y+=.5*V_DIR.y;
+p1.z+=.5*V_DIR.z;
+
+}
   dessin_grille();
   glutSwapBuffers();
 
@@ -880,6 +921,15 @@ void keyPressed (unsigned char key, int x, int y) {
   if (key == 'k'){
     projectile(V_DIR,p1_hyperC,p2_hyperC);
     fprintf(stderr,"VEC: %f %f %f \n",V_DIR.x,V_DIR.y,V_DIR.z);
+  }
+  if (key=='n'){
+    if(nuages_toggle) nuages_toggle=0;
+    else nuages_toggle=1;
+  }
+  
+  if (key=='b'){
+    if(auto_scroll_toggle) auto_scroll_toggle=0;
+    else auto_scroll_toggle=1;
   }
 
 }
@@ -940,6 +990,13 @@ int main(int argc, char**argv){
   V_UP.y=0;
   V_UP.z=1;
 
+  V_90_INIT.x = 0;
+  V_90_INIT.y = 1;
+  V_90_INIT.z = 0;
+  
+  V_UP_INIT.x=0;
+  V_UP_INIT.y=0;
+  V_UP_INIT.z=1;
   // Initialisation décors
 
   nuages=0;
@@ -983,7 +1040,7 @@ int main(int argc, char**argv){
   glutInitWindowSize(800, 800); //ou fullscreen
   glutInitWindowPosition(50, 50);
 
-  glutCreateWindow("TP");
+  glutCreateWindow("FIGHT MILK");
   glEnable( GL_BLEND );
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
   glEnable(GL_DEPTH_TEST);
