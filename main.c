@@ -5,7 +5,12 @@
 // Variables décors
 int nuages;
 float tab_decors[200][200];
+
+float tab_arbre[50][2];
+
 int rand_seed;
+
+int arbre=1;
 
 // Variables d'animation
 
@@ -42,6 +47,62 @@ void couleur(int c){
 
 }
 
+void affiche_cube_plein(float3 p1, float3 p2, float opacity){
+  
+  glBegin(GL_QUADS);
+  
+  // face dessous
+  
+  glColor4f(1,1,0,opacity);
+  glVertex3f(p1.x,p1.y,p1.z);
+  glVertex3f(p2.x,p1.y,p1.z);
+  glVertex3f(p2.x,p1.y,p2.z);
+  glVertex3f(p1.x,p1.y,p2.z);
+
+  // face dessus
+  
+  glColor4f(1,0.5,0,opacity);
+  glVertex3f(p1.x,p2.y,p1.z);
+  glVertex3f(p2.x,p2.y,p1.z);
+  glVertex3f(p2.x,p2.y,p2.z);
+  glVertex3f(p1.x,p2.y,p2.z);
+
+  // face devant
+  
+  glColor4f(1,0,1,opacity);
+  glVertex3f(p1.x,p1.y,p1.z);
+  glVertex3f(p2.x,p1.y,p1.z);
+  glVertex3f(p2.x,p2.y,p1.z);
+  glVertex3f(p1.x,p2.y,p1.z);
+
+  // face derriere
+  
+  glColor4f(1,0,0,opacity);
+  glVertex3f(p2.x,p1.y,p2.z);
+  glVertex3f(p1.x,p1.y,p2.z);
+  glVertex3f(p1.x,p2.y,p2.z);
+  glVertex3f(p2.x,p2.y,p2.z);
+
+  //face gauche
+  
+  glColor4f(0,1,0,opacity);
+  glVertex3f(p1.x,p1.y,p1.z);
+  glVertex3f(p1.x,p1.y,p2.z);
+  glVertex3f(p1.x,p2.y,p2.z);
+  glVertex3f(p1.x,p2.y,p1.z);
+  
+  //face droite
+  
+  glColor4f(0,0,1,opacity);
+  glVertex3f(p2.x,p1.y,p1.z);
+  glVertex3f(p2.x,p1.y,p2.z);
+  glVertex3f(p2.x,p2.y,p2.z);
+  glVertex3f(p2.x,p2.y,p1.z);
+  
+  glEnd();
+  
+
+}
 
 int clamp (int n){
   if (n<0) return 0;
@@ -77,6 +138,143 @@ void aplanir(){
 
 }
 
+void dessin_arbre2(){
+  /* glScalef a passer en param
+     + translate */
+  glColor3f(.8,.8,.8);
+  glBegin(GL_QUADS);
+
+  /* PIED*/
+  glVertex3f(1,1,-15);
+  glVertex3f(-1,1,-15);
+  glVertex3f(-1,1,3);
+  glVertex3f(1,1,3);
+
+  glVertex3f(1,1,-15);
+  glVertex3f(1,-1,-15);
+  glVertex3f(1,-1,3);
+  glVertex3f(1,1,3);
+
+  glVertex3f(1,-1,-15);
+  glVertex3f(-1,-1,-15);
+  glVertex3f(-1,-1,3);
+  glVertex3f(1,-1,3);
+
+  glVertex3f(-1,-1,-15);
+  glVertex3f(-1,1,-15);
+  glVertex3f(-1,1,3);
+  glVertex3f(-1,-1,3);
+
+  glEnd();
+  
+  /*DESSUS */
+  
+  glColor3f(.2,.25,.2);
+  glBegin(GL_TRIANGLES);
+
+  glVertex3f(4,4,3);
+  glVertex3f(-4,4,3);
+  glVertex3f(0,0,15);
+
+  glVertex3f(4,4,3);
+  glVertex3f(4,-4,3);
+  glVertex3f(0,0,15);
+
+  glVertex3f(4,-4,3);
+  glVertex3f(-4,-4,3);
+  glVertex3f(0,0,15);
+
+  glVertex3f(-4,-4,3);
+  glVertex3f(-4,4,3);
+  glVertex3f(0,0,15);
+
+  glEnd();
+
+  glColor3f(.1,.1,.1);
+  glLineWidth(1.5);
+  glBegin(GL_LINES);
+  /* lignes arbre */
+  /* vertical */
+  glVertex3f(4,4,3);
+  glVertex3f(0,0,15);
+  
+  glVertex3f(-4,4,3);
+  glVertex3f(0,0,15);
+
+  
+  glVertex3f(4,-4,3);
+  glVertex3f(0,0,15);
+
+  
+  glVertex3f(-4,-4,3);
+  glVertex3f(0,0,15);
+  /* horizontal*/
+  
+  glVertex3f(4,4,3);
+  glVertex3f(-4,4,3);
+  
+  glVertex3f(4,4,3);
+  glVertex3f(4,-4,3);
+
+  glVertex3f(4,-4,3);
+  glVertex3f(-4,-4,3);
+
+  glVertex3f(-4,-4,3);
+  glVertex3f(-4,4,3);
+  
+
+  /* ligne cube */
+
+  
+  glVertex3f(1,1,-15);
+  glVertex3f(1,1,3);
+
+  glVertex3f(1,-1,-15);
+  glVertex3f(1,-1,3);
+
+  glVertex3f(-1,-1,-15);
+  glVertex3f(-1,-1,3);
+
+  glVertex3f(-1,1,-15);
+  glVertex3f(-1,1,3);
+
+  glEnd();
+  glLineWidth(1);
+
+}
+
+void dessin_arbre(){
+    int i;
+  if (arbre==1){
+    for(i=0; i<50; i++){
+      tab_arbre[i][0]=rand()%200;
+      tab_arbre[i][1]=rand()%200;
+
+      fprintf(stderr,"ici la hauteur : %f \n",tab_decors[(int)tab_arbre[i][0]][(int)tab_arbre[i][1]]);
+    }
+    arbre++;
+  }
+  else{
+
+    for(i=0; i<50; i++){
+	
+      glPushMatrix();
+      glScalef(0.5,.5,.5);
+      glTranslatef(tab_arbre[i][0],tab_arbre[i][1],tab_decors[(int)tab_arbre[i][0]][(int)tab_arbre[i][1]]);
+      dessin_arbre2();
+      glPopMatrix();
+      float3 f1,f2,f3;
+      f1.x=tab_arbre[i][0];
+      f2.x=tab_arbre[i][0]+5;
+      f1.y=tab_arbre[i][1];
+      f2.y=tab_arbre[i][1]+5;
+      f1.z=tab_decors[(int)tab_arbre[i][0]][(int)tab_arbre[i][1]];
+      f2.z=tab_decors[(int)tab_arbre[i][0]][(int)tab_arbre[i][1]]+5;
+      affiche_cube_plein(f1,f2,1);
+    }
+
+  }
+}
 
 void dessin_carton_lait(float x_, float y_, float z_, float size){
   // x_, y_, z_ sont les coordonnées du centre de l'objet
@@ -179,14 +377,15 @@ void dessin_grille(){
     for ( i =borneInf; i < borneSup; i+=pas ){
 
       c = mapFloat(tab_decors[clamp(abs(i+nuages))%200][clamp(abs(j+nuages))%200],0,5,0,1);
-      glColor3f(c,c,c);
+      // glColor3f(c,c,c);
+      glColor3f(.5,.5,.5);
       
       glVertex3f(i, j, tab_decors[i-borneInf][j-borneInf]);
       glVertex3f(i, j+pas, tab_decors[i-borneInf][j-borneInf+pas]);
       glVertex3f(i+pas, j, tab_decors[i-borneInf+pas][j-borneInf]);
 
       c = mapFloat(tab_decors[clamp(abs(i+nuages+1))%200][clamp(abs(j+nuages+1))%200],0,5,0,1);
-      glColor3f(c,c,c);
+      glColor3f(.9,.9,.9);
    
       glVertex3f(i, j+pas, tab_decors[i-borneInf][j-borneInf+pas]);
       glVertex3f(i+pas, j, tab_decors[i-borneInf+pas][j-borneInf]);
@@ -195,10 +394,11 @@ void dessin_grille(){
       
     }
     glEnd();
-    for ( i =borneInf; i < borneSup; i+=pas ){
+    /*
+      for ( i =borneInf; i < borneSup; i+=pas ){
 
       dessin_carton_lait(i,j,10,.5);
-    }
+      }*/
   }
 
   // afficher_axes();
@@ -269,62 +469,6 @@ void affiche_cube(float3 p1, float3 p2){
   glLineWidth(1);
 }
 
-void affiche_cube_plein(float3 p1, float3 p2, float opacity){
-  
-  glBegin(GL_QUADS);
-  
-  // face dessous
-  
-  glColor4f(1,1,0,opacity);
-  glVertex3f(p1.x,p1.y,p1.z);
-  glVertex3f(p2.x,p1.y,p1.z);
-  glVertex3f(p2.x,p1.y,p2.z);
-  glVertex3f(p1.x,p1.y,p2.z);
-
-  // face dessus
-  
-  glColor4f(1,0.5,0,opacity);
-  glVertex3f(p1.x,p2.y,p1.z);
-  glVertex3f(p2.x,p2.y,p1.z);
-  glVertex3f(p2.x,p2.y,p2.z);
-  glVertex3f(p1.x,p2.y,p2.z);
-
-  // face devant
-  
-  glColor4f(1,0,1,opacity);
-  glVertex3f(p1.x,p1.y,p1.z);
-  glVertex3f(p2.x,p1.y,p1.z);
-  glVertex3f(p2.x,p2.y,p1.z);
-  glVertex3f(p1.x,p2.y,p1.z);
-
-  // face derriere
-  
-  glColor4f(1,0,0,opacity);
-  glVertex3f(p2.x,p1.y,p2.z);
-  glVertex3f(p1.x,p1.y,p2.z);
-  glVertex3f(p1.x,p2.y,p2.z);
-  glVertex3f(p2.x,p2.y,p2.z);
-
-  //face gauche
-  
-  glColor4f(0,1,0,opacity);
-  glVertex3f(p1.x,p1.y,p1.z);
-  glVertex3f(p1.x,p1.y,p2.z);
-  glVertex3f(p1.x,p2.y,p2.z);
-  glVertex3f(p1.x,p2.y,p1.z);
-  
-  //face droite
-  
-  glColor4f(0,0,1,opacity);
-  glVertex3f(p2.x,p1.y,p1.z);
-  glVertex3f(p2.x,p1.y,p2.z);
-  glVertex3f(p2.x,p2.y,p2.z);
-  glVertex3f(p2.x,p2.y,p1.z);
-  
-  glEnd();
-  
-
-}
 void projectile(float3 direction,float3 m1, float3 m2){
   int i;
   for( i=0;i<50;i++){
@@ -569,47 +713,51 @@ void affichage(){
   p2_hyperC.x=p1.x+(3*(p2.x-p1.x)/4);
   p2_hyperC.y=p1.y+(3*(p2.y-p1.y)/4);
   p2_hyperC.z=p1.z+(3*(p2.z-p1.z)/4);
+
   
+  dessin_arbre();
+
+    
   /*
-  affichage_pt(p1);
-  affichage_pt(p2);
-  affichage_pt(p1_hyperC);
-  affichage_pt(p2_hyperC);
-  fprintf(stderr,"_____________\n");
+    affichage_pt(p1);
+    affichage_pt(p2);
+    affichage_pt(p1_hyperC);
+    affichage_pt(p2_hyperC);
+    fprintf(stderr,"_____________\n");
   */
 
   
   // ROTATION ET AFFICHAGE DU CUBE
 
   /*
-  glPushMatrix();
+    glPushMatrix();
   
-  glTranslatef((p1.x+p2.x)/2,(p1.y+p2.y)/2,(p1.z+p2.z)/2);
-  glRotatef(angle,V_UP.x,V_UP.y,V_UP.z);
-  glRotatef(angle_tangage,V_90.x,V_90.y,V_90.z);
-  glTranslatef(-(p1.x+p2.x)/2,-(p1.y+p2.y)/2,-(p1.z+p2.z)/2);
+    glTranslatef((p1.x+p2.x)/2,(p1.y+p2.y)/2,(p1.z+p2.z)/2);
+    glRotatef(angle,V_UP.x,V_UP.y,V_UP.z);
+    glRotatef(angle_tangage,V_90.x,V_90.y,V_90.z);
+    glTranslatef(-(p1.x+p2.x)/2,-(p1.y+p2.y)/2,-(p1.z+p2.z)/2);
   */ 
- affiche_cube(p1,p2);
+  affiche_cube(p1,p2);
   
- /* glPopMatrix();
+  /* glPopMatrix();
 
-  affiche_cube_plein(p1_hyperC,p2_hyperC,1);
+     affiche_cube_plein(p1_hyperC,p2_hyperC,1);
 
   
-  glPushMatrix();
+     glPushMatrix();
   
-  glTranslatef((p1.x+p2.x)/2,(p1.y+p2.y)/2,(p1.z+p2.z)/2);
-  glRotatef(angle,V_90.x,V_90.y,V_90.z);
-  glRotatef(angle_tangage,V_UP.x,V_UP.y,V_UP.z);
-  glTranslatef(-(p1.x+p2.x)/2,-(p1.y+p2.y)/2,-(p1.z+p2.z)/2);
+     glTranslatef((p1.x+p2.x)/2,(p1.y+p2.y)/2,(p1.z+p2.z)/2);
+     glRotatef(angle,V_90.x,V_90.y,V_90.z);
+     glRotatef(angle_tangage,V_UP.x,V_UP.y,V_UP.z);
+     glTranslatef(-(p1.x+p2.x)/2,-(p1.y+p2.y)/2,-(p1.z+p2.z)/2);
   
-  affiche_cube_plein(p1_hyperC2,p2_hyperC2,0.1);
-  affiche_cube(p1_hyperC2,p2_hyperC2);
+     affiche_cube_plein(p1_hyperC2,p2_hyperC2,0.1);
+     affiche_cube(p1_hyperC2,p2_hyperC2);
   
-  glPopMatrix();
+     glPopMatrix();
 
 
- */
+  */
   
   /*
     glPushMatrix();
@@ -629,20 +777,20 @@ void affichage(){
   /* Affichage de la grille */
 
   /* Ancien sol
-  glBegin(GL_QUADS);
+     glBegin(GL_QUADS);
   
-  for( i=-100; i<100; i=i+10){
-    for( j=-90; j<=100; j=j+10){
-      glColor4f((float)(i+j)/100,(float)i/100,(float)j/100,1);
-      glVertex3f(i+0.5,-j+0.5,0);
-      glVertex3f(i+9.5,-j+0.5,0);
-      glVertex3f(i+9.5,-j+9.5,0);
-      glVertex3f(i+0.5,-j+9.5,0);
+     for( i=-100; i<100; i=i+10){
+     for( j=-90; j<=100; j=j+10){
+     glColor4f((float)(i+j)/100,(float)i/100,(float)j/100,1);
+     glVertex3f(i+0.5,-j+0.5,0);
+     glVertex3f(i+9.5,-j+0.5,0);
+     glVertex3f(i+9.5,-j+9.5,0);
+     glVertex3f(i+0.5,-j+9.5,0);
 
-    }
-  }
+     }
+     }
   
-  glEnd();
+     glEnd();
   */
   
   /* AXES */
@@ -662,7 +810,7 @@ void affichage(){
     glEnd();
   */
 
- dessin_grille();
+  dessin_grille();
   glutSwapBuffers();
 
 }
@@ -717,7 +865,31 @@ void keyPressed (unsigned char key, int x, int y) {
     projectile(V_DIR,p1_hyperC,p2_hyperC);
     fprintf(stderr,"VEC: %f %f %f \n",V_DIR.x,V_DIR.y,V_DIR.z);
   }
+
 }
+
+void mountain(int i_e, int j_e){
+  int i,j;
+  for ( i = 20 ; i > 0 ;i-- )
+    for ( j = 20 ; j > 0 ;j-- ){
+      tab_decors[i_e+i][j_e+j] +=20-((i+j)/2);
+      tab_decors[i_e+i][j_e-j] +=20-((i+j)/2);
+      tab_decors[i_e-i][j_e-j] +=20-((i+j)/2);
+      tab_decors[i_e-i][j_e+j] +=20-((i+j)/2);
+    }
+
+}
+  
+
+
+
+
+
+
+
+
+
+  
 int main(int argc, char**argv){
   //INITIALISATION
   int i,j,y;
@@ -770,9 +942,11 @@ int main(int argc, char**argv){
   for ( i = 0 ; i < 200 ;i++ )
     tab_decors[i][100] = -50;
 
-  for (  i = 0 ; i < 16 ; i++)   aplanir();
-
+  mountain(25,25);
+  mountain(45,45);
   
+  for (  i = 0 ; i < 3 ; i++)   aplanir();
+
   
   fprintf(stderr,"VECT: %f %f %f \n",V_UP.x,V_UP.y,V_UP.z);
   fprintf(stderr,"VEC90: %f %f %f \n",V_90.x,V_90.y,V_90.z);
