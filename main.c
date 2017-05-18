@@ -4,7 +4,7 @@
 #define GRIS 2
 // Variables décors
 int nuages;
-float tab_decors[200][200];
+float tab_decors[500][500];
 int rand_seed;
 
 // Variables d'animation
@@ -43,10 +43,13 @@ void couleur(int c){
 }
 
 
-int clamp (int n){
-  if (n<0) return 0;
-  if (n>=200) return 199;
+int clamp_min_max(int n, int min, int max){
+  if (n<min) return min;
+  if (n>=max) return max;
   return n;
+}
+int clamp(int n){
+  return clamp_min_max(n,0,497);
 }
 
 float mapFloat(float nombre, float actuelInf, float actuelSup, float cibleInf, float cibleSup){
@@ -58,8 +61,8 @@ void aplanir(){
   int i;
   int j;
     
-  for ( i = 0 ; i < 199 ; i++){
-    for ( j = 0 ; j < 199 ; j++){
+  for ( i = 0 ; i < 500 ; i++){
+    for ( j = 0 ; j < 500 ; j++){
       tab_decors[i][j]=(tab_decors[clamp(i-1)][clamp(j-1)]+
 			tab_decors[clamp( i )][clamp(j-1)]+
 			tab_decors[clamp(i+1)][clamp(j-1)]+
@@ -159,46 +162,54 @@ void dessin_carton_lait(float x_, float y_, float z_, float size){
 void dessin_grille(){
   int borneInf = -99;
   int borneSup = 99;
+
+  int bS=500;
   float c;
-  int pas = 2;
+  int pas = 3;
   int p;
   int i,j;
   //  t=0;
   //  glColor3f(0.2,0.7 ,0.45 );
   //  for (int i = borne; i < -borne; i++ ){
   //afficher_axes();
-  
+
+  //Animation nuages
   p=rand()%100;
-
-  if ( p < 85) nuages ++;
+  if ( p < 25) nuages ++;
   if (nuages>200) nuages=0;
-
-  for ( j = borneInf; j < borneSup; j+=pas ){
+  
+  for ( j = 0; j < bS; j+=pas ){
 
     glBegin(GL_TRIANGLE_STRIP);
-    for ( i =borneInf; i < borneSup; i+=pas ){
+    for ( i = 0; i < bS; i+=pas ){
 
-      c = mapFloat(tab_decors[clamp(abs(i+nuages))%200][clamp(abs(j+nuages))%200],0,5,0,1);
-      glColor3f(c,c,c);
+      // changement couleurs( nuages )
+      c = mapFloat(tab_decors[clamp(abs(i+nuages))%10][clamp(abs(j+nuages))%10],0,5,0,1);
+            glColor3f(c,c,c);
+      // glColor3f(.5,.5,.5);
       
-      glVertex3f(i, j, tab_decors[i-borneInf][j-borneInf]);
-      glVertex3f(i, j+pas, tab_decors[i-borneInf][j-borneInf+pas]);
-      glVertex3f(i+pas, j, tab_decors[i-borneInf+pas][j-borneInf]);
+      glVertex3f(i, j, tab_decors[i][j]);
+      glVertex3f(i, j+pas, tab_decors[i][j+pas]);
+      glVertex3f(i+pas, j, tab_decors[i+pas][j]);
 
-      c = mapFloat(tab_decors[clamp(abs(i+nuages+1))%200][clamp(abs(j+nuages+1))%200],0,5,0,1);
-      glColor3f(c,c,c);
-   
-      glVertex3f(i, j+pas, tab_decors[i-borneInf][j-borneInf+pas]);
-      glVertex3f(i+pas, j, tab_decors[i-borneInf+pas][j-borneInf]);
-      glVertex3f(i+pas, j+pas, tab_decors[i-borneInf+pas][j-borneInf+pas] );
+      // changement couleurs (nuages )
+       c = mapFloat(tab_decors[clamp(abs(i+nuages+1))%10][clamp(abs(j+nuages+1))%10],0,5,0,1);
+            glColor3f(c,c,c);
+	    //  glColor3f(.8,.8,.8);
+      
+      glVertex3f(i, j+pas, tab_decors[i][j+pas]);
+      glVertex3f(i+pas, j, tab_decors[i+pas][j]);
+      glVertex3f(i+pas, j+pas, tab_decors[i+pas][j+pas] );
 
       
     }
     glEnd();
+    /*
     for ( i =borneInf; i < borneSup; i+=pas ){
 
       dessin_carton_lait(i,j,10,.5);
     }
+    */
   }
 
   // afficher_axes();
@@ -502,8 +513,8 @@ void affichage(){
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glLoadIdentity();
   
-  // glFrustum(-1,1,-1,1,1,100);
-  gluPerspective(100,1,0.1,1000);
+   glFrustum(-10,10,-10,10,10,10000);
+  //gluPerspective(100,1,0.1,1000);
   gluLookAt(  centre_cube.x-30*V_DIR.x +  V_UP.x*8 ,centre_cube.y-30*V_DIR.y +  V_UP.y*8 ,centre_cube.z-30*V_DIR.z +  V_UP.z*8 ,
 	      centre_cube.x+10*V_DIR.x,centre_cube.y+10*V_DIR.y,centre_cube.z+10*V_DIR.z,
 	      V_UP.x, V_UP.y, V_UP.z);
@@ -662,7 +673,7 @@ void affichage(){
     glEnd();
   */
 
- dessin_grille();
+  dessin_grille();
   glutSwapBuffers();
 
 }
@@ -757,21 +768,24 @@ int main(int argc, char**argv){
   time_t t;
   srand((unsigned) time(&t));
 
-  for ( i = 0 ; i < 200 ; i++){
-    for ( j = 0 ; j < 200 ; j++){
+  for ( i = 0 ; i < 500 ; i++){
+    for ( j = 0 ; j < 500 ; j++){
       rand_seed=rand()%30+1;
 
       tab_decors[i][j]=mapFloat((rand()/rand_seed)%5,0,5,-10,20);
-      //  printf("%f ",tab[i][j]);
+        printf("%f ",tab_decors[i][j]);
     }
   }
 
+
+  // crevasse
+
   
-  for ( i = 0 ; i < 200 ;i++ )
-    tab_decors[i][100] = -50;
+  for ( i = 0 ; i < 500 ;i++ )
+    tab_decors[i][150] = -50;
 
-  for (  i = 0 ; i < 16 ; i++)   aplanir();
-
+  for (  i = 0 ; i < 4 ; i++)   aplanir();
+  
   
   
   fprintf(stderr,"VECT: %f %f %f \n",V_UP.x,V_UP.y,V_UP.z);
