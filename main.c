@@ -661,6 +661,8 @@ void affichage(){
   
     glEnd();
   */
+
+ dessin_grille();
   glutSwapBuffers();
 
 }
