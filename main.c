@@ -1,23 +1,25 @@
 #include "karbre.h"
 #include "float3.h"
 #include "draw.h"
+#include "construction_karbre.h"
 
 int pppp=1;
 
+karbre karbre8;
 // Variables detection collision
 float r_sphere_joueur;
 
 // Variables décors
 int nuages;
-float tab_arbre[500][2];
-float tab_decors[500][500];
+float3 tab_arbre[500];
+float tab_decors[1000][1000];
 float tab_lait[200][2];
 
 int rand_seed;
 int nuages_toggle=1;
 int auto_scroll_toggle=1;
 int arbre=1;
-
+int wouah=0;
 // Variables d'animation
 
 float angle=0;
@@ -39,14 +41,13 @@ float3 V_UP_INIT;
 float3 V_90_INIT;
 float3 tab_proj[50][3];
 
-
 int clamp_min_max(int n, int min, int max){
   if (n<min) return min;
   if (n>=max) return max;
   return n;
 }
 int clamp(int n){
-  return clamp_min_max(n,0,497);
+  return clamp_min_max(n,0,997);
 }
 
 float mapFloat(float nombre, float actuelInf, float actuelSup, float cibleInf, float cibleSup){
@@ -58,8 +59,8 @@ void aplanir(){
   int i;
   int j;
     
-  for ( i = 0 ; i < 500 ; i++){
-    for ( j = 0 ; j < 500 ; j++){
+  for ( i = 0 ; i < 1000 ; i++){
+    for ( j = 0 ; j < 1000 ; j++){
       tab_decors[i][j]=(tab_decors[clamp(i-1)][clamp(j-1)]+
 			tab_decors[clamp( i )][clamp(j-1)]+
 			tab_decors[clamp(i+1)][clamp(j-1)]+
@@ -82,36 +83,39 @@ void init_arbres(){
   
   int i,j;
   for(i=0; i<200; i++){
-    tab_arbre[i][0]=rand()%490+1;
-    tab_arbre[i][1]=rand()%490+1;
+    tab_arbre[i].x=rand()%990+1;
+    tab_arbre[i].y=rand()%990+1;
+    tab_arbre[i].z=1; /* TYPE = ARBRE, on utilise tab_decors pour la hauteur*/
 
   }
   int indice=200;
   for(i=0; i<29; i++){// 10*15
-    int randx=rand()%490+1;
-    int randy=rand()%490+1;
-    tab_arbre[indice][0]=randx;
-    tab_arbre[indice][1]=randy;
+    int randx=rand()%990+1;
+    int randy=rand()%990+1;
+    tab_arbre[indice].x=randx;
+    tab_arbre[indice].y=randy;
     indice++;
     for(j=0;j<9;j++){
       int signe=rand()%2-1;
       if (signe==0) signe=1;
-      tab_arbre[indice][0]=clamp_min_max(randx+signe*rand()%30,10,490);
+      tab_arbre[indice].x=clamp_min_max(randx+signe*rand()%30,10,490);
       signe=rand()%2-1;
       if (signe==0) signe=1;
-      tab_arbre[indice][1]=clamp_min_max(randy+signe*rand()%30,10,490);
-      indice++;
+      tab_arbre[indice].y=clamp_min_max(randy+signe*rand()%30,10,490);
+         indice++;
     }
+    
   }
   arbre++;
+  
 }
 
 
 void init_lait(){
   int i;
   for(i=0; i<200; i++){
-    tab_lait[i][0]=rand()%300+100;
-    tab_lait[i][1]=rand()%300+100;
+    tab_lait[i][0]=rand()%700+100;
+    tab_lait[i][1]=rand()%700+100;
   }
 }
 
@@ -130,8 +134,8 @@ void dessin_arbre(){
   int i;
   for(i=0; i<250; i++){
     glPushMatrix();
-    glTranslatef(tab_arbre[i][0],tab_arbre[i][1],tab_decors[(int)tab_arbre[i][0]][(int)tab_arbre[i][1]]);
-    glScalef(0.5,.5,.5);
+    glTranslatef(tab_arbre[i].x,tab_arbre[i].y,tab_decors[(int)tab_arbre[i].x][(int)tab_arbre[i].y]);
+    glScalef(3,3,3);
     dessin_arbre2();
     glPopMatrix();
   }
@@ -142,7 +146,7 @@ void dessin_grille(){
   int borneInf = -99;
   int borneSup = 99;
 
-  int bS=497;
+  int bS=997;
   float c;
   int pas = 2;
   int p;
@@ -154,8 +158,9 @@ void dessin_grille(){
 
   //Animation nuages
   p=rand()%100;
-  if ( p < 85) nuages ++;
-  if (nuages>497) nuages=0;
+  //if ( p < 85)
+  nuages +=3;
+  if (nuages>997) nuages=0;
 
   if (!nuages_toggle)
     nuages=0;
@@ -166,7 +171,7 @@ void dessin_grille(){
     for ( i = 0; i < bS; i+=pas ){
 
       // changement couleurs( nuages )
-      c = mapFloat(tab_decors[(i+nuages)%497][(j+nuages)%497],0,5,0,1);
+      c = mapFloat(tab_decors[(i+nuages)%997][(j+nuages)%997],0,200,0,1);
       glColor3f(c,c,c);
       // glColor3f(.5,.5,.5);
       
@@ -175,7 +180,7 @@ void dessin_grille(){
       glVertex3f(i+pas, j, tab_decors[i+pas][j]);
 
       // changement couleurs (nuages )
-      c = mapFloat(tab_decors[(i+nuages)%497][(j+nuages)%497],0,5,0,1);
+      c = mapFloat(tab_decors[(i+nuages)%997][(j+nuages)%997],0,200,0,1);
       glColor3f(c,c,c);
       //  glColor3f(.8,.8,.8);
       
@@ -234,25 +239,25 @@ void gestion_input(){
 
     // MAJ DU CUBE
     
-    p1.z-=V_DIR.z;
-    p1.x-=V_DIR.x;
-    p1.y-=V_DIR.y;
+    p1.z-=4*V_DIR.z;
+    p1.x-=4*V_DIR.x;
+    p1.y-=4*V_DIR.y;
     
-    p2.z-=V_DIR.z;
-    p2.x-=V_DIR.x;
-    p2.y-=V_DIR.y;
+    p2.z-=4*V_DIR.z;
+    p2.x-=4*V_DIR.x;
+    p2.y-=4*V_DIR.y;
   }
   if (key_z == 1){
  
     // MAJ DU CUBE
     
-    p1.x+=V_DIR.x;
-    p1.z+=V_DIR.z;
-    p1.y+=V_DIR.y;
+    p1.x+=4*V_DIR.x;
+    p1.z+=4*V_DIR.z;
+    p1.y+=4*V_DIR.y;
     
-    p2.z+=V_DIR.z;
-    p2.x+=V_DIR.x;
-    p2.y+=V_DIR.y;
+    p2.z+=4*V_DIR.z;
+    p2.x+=4*V_DIR.x;
+    p2.y+=4*V_DIR.y;
   }
     
   if (key_q == 1){
@@ -317,8 +322,9 @@ void gestion_input(){
       float3 save_PV=V_UP;
     */
     V_DIR=rodrigues(0.8,V_DIR,V_90);
-    V_UP=produit_vectoriel(V_DIR,V_90);/*    
-					     /* Pour contrer le renversement du vecteur par double produit vectoriel */
+    V_UP=produit_vectoriel(V_DIR,V_90);
+    /*    
+	  /* Pour contrer le renversement du vecteur par double produit vectoriel */
     /*
       if (save_PV.x* V_UP.x+save_PV.y* V_UP.y+ save_PV.z* V_UP.z < cos(M_PI/180)){
       V_UP.x=- V_UP.x;
@@ -365,6 +371,7 @@ void affichage(){
   
   glFrustum(-10,10,-10,10,10,10000);
   //gluPerspective(100,1,0.1,1000);
+  
   gluLookAt(centre_cube.x-30*V_DIR.x +  V_UP.x*8 ,
 	    centre_cube.y-30*V_DIR.y +  V_UP.y*8 ,
 	    centre_cube.z-30*V_DIR.z +  V_UP.z*8 ,
@@ -375,6 +382,7 @@ void affichage(){
 	    V_UP.y,
 	    V_UP.z
 	    );
+  
   /*
     gluLookAt(centre_cube.x-30*V_DIR.x +  V_UP.x*8 ,
     centre_cube.y-30*V_DIR.y +  V_UP.y*8 ,
@@ -388,7 +396,7 @@ void affichage(){
     );
   */  
   
-  //gluLookAt(-70,-20,70,10,50,10,0,0,1);
+    //  gluLookAt(-70,-20,70,10,50,10,0,0,1);
 
 
   for( i=0; i<50; i++){
@@ -457,14 +465,14 @@ void affichage(){
 
 
   glColor4f(0,1,1,1);
-  for(i=0; i<500; i=i+10){
+  for(i=0; i<1000; i=i+10){
     glVertex3f(i,0,0);
   glVertex3f(i,0,300);
   }
 
   
   glVertex3f(0,0,pppp);
-  glVertex3f(500,0,pppp);
+  glVertex3f(1000,0,pppp);
       
 
 
@@ -479,6 +487,7 @@ void affichage(){
 
 
   
+
   glEnd();
   
   p1_hyperC2.x=p1.x-((p2.x-p1.x)/4);
@@ -498,12 +507,17 @@ void affichage(){
   p2_hyperC.y=p1.y+(3*(p2.y-p1.y)/4);
   p2_hyperC.z=p1.z+(3*(p2.z-p1.z)/4);
 
+
+  /* on pourra faire fonction generale avec le .z > type */
+
+
+
+
+  affiche_karbre4(karbre8,centre_cube,V_DIR,V_UP);
   
-  dessin_arbre();
+
+  //dessin_arbre();
   dessin_lait();
-
-
-  dessin_carton_lait();
 
   
     
@@ -568,7 +582,34 @@ void affichage(){
     glPopMatrix();
   */
 
-  
+  glColor4f(1,1,0,0.7);
+
+  glBegin(GL_QUADS);
+     glVertex3f(480-wouah,480-wouah,-100);
+     glVertex3f(480-wouah,520+wouah,-100);
+     glVertex3f(480-wouah,520+wouah,800);
+     glVertex3f(480-wouah,480-wouah,800);
+
+     glVertex3f(480-wouah,520+wouah,-100);
+     glVertex3f(520+wouah,520+wouah,-100);
+     glVertex3f(520+wouah,520+wouah,800);
+     glVertex3f(480-wouah,520+wouah,800);
+     
+     glVertex3f(480-wouah,480-wouah,-100);
+     glVertex3f(520+wouah,480-wouah,-100);
+     glVertex3f(520+wouah,480-wouah,800);
+     glVertex3f(480-wouah,480-wouah,800);
+     
+     glVertex3f(520+wouah,480-wouah,-100);
+     glVertex3f(520+wouah,520+wouah,-100);
+     glVertex3f(520+wouah,520+wouah,800);
+     glVertex3f(520+wouah,480-wouah,800);
+
+     glEnd();
+
+     if(centre_cube.x>480 && centre_cube.x<520
+	&& centre_cube.y>480 && centre_cube.y<520)
+       wouah+=3;
   
   /* Affichage de la grille */
 
@@ -689,38 +730,25 @@ void mountain(int i_e, int j_e, int largeur){
   int i,j;
   // 150 est la hauteur max > probleme des bords
   
-  for(i=0;i<500;i++)
-    for(j=0;j<500;j++)
-      if (tab_decors[i][j]>150)
-	fprintf(stderr,"PRE- %f  ij %d %d\n",tab_decors[i][j],i,j);
   
   for ( i = largeur ; i > 0 ;i-- )
     for ( j = largeur ; j > 0 ;j-- ){
-      if(tab_decors[clamp_min_max(i_e+i,0,500)][clamp_min_max(j_e+j,0,500)]+largeur<150)
-	tab_decors[clamp_min_max(i_e+i,0,500)][clamp_min_max(j_e+j,0,500)] +=largeur-((i+j)/2);
-      if(tab_decors[clamp_min_max(i_e+i,0,500)][clamp_min_max(j_e-j,0,500)]+largeur<150)
-	tab_decors[clamp_min_max(i_e+i,0,500)][clamp_min_max(j_e-j,0,500)] +=largeur-((i+j)/2);
-      if( tab_decors[clamp_min_max(i_e-i,0,500)][clamp_min_max(j_e-j,0,500)]+largeur<150)
-	tab_decors[clamp_min_max(i_e-i,0,500)][clamp_min_max(j_e-j,0,500)] +=largeur-((i+j)/2);
-      if( tab_decors[clamp_min_max(i_e-i,0,500)][clamp_min_max(j_e+j,0,500)]+largeur<150)
-	tab_decors[clamp_min_max(i_e-i,0,500)][clamp_min_max(j_e+j,0,500)] +=largeur-((i+j)/2);
-      /*
-      fprintf(stderr,"TEST\n\t %f\t %f\t %f\t %f\n",
-	      tab_decors[clamp_min_max(i_e+i,0,500)][clamp_min_max(j_e+j,0,500)],
-	      tab_decors[clamp_min_max(i_e+i,0,500)][clamp_min_max(j_e-j,0,500)],
-	      tab_decors[clamp_min_max(i_e-i,0,500)][clamp_min_max(j_e-j,0,500)] ,
-	      tab_decors[clamp_min_max(i_e-i,0,500)][clamp_min_max(j_e+j,0,500)]);*/
-	      }
-  
-  for(i=0;i<500;i++)
-    for(j=0;j<500;j++)
-      if (tab_decors[i][j]>150)
-	fprintf(stderr,"POST- %f  ij %d %d\n",tab_decors[i][j],i,j);
+      if(tab_decors[clamp_min_max(i_e+i,0,1000)][clamp_min_max(j_e+j,0,1000)]+largeur<150)
+	tab_decors[clamp_min_max(i_e+i,0,1000)][clamp_min_max(j_e+j,0,1000)] +=largeur-((i+j)/2);
+      if(tab_decors[clamp_min_max(i_e+i,0,1000)][clamp_min_max(j_e-j,0,1000)]+largeur<150)
+	tab_decors[clamp_min_max(i_e+i,0,1000)][clamp_min_max(j_e-j,0,1000)] +=largeur-((i+j)/2);
+      if( tab_decors[clamp_min_max(i_e-i,0,1000)][clamp_min_max(j_e-j,0,1000)]+largeur<150)
+	tab_decors[clamp_min_max(i_e-i,0,1000)][clamp_min_max(j_e-j,0,1000)] +=largeur-((i+j)/2);
+      if( tab_decors[clamp_min_max(i_e-i,0,1000)][clamp_min_max(j_e+j,0,1000)]+largeur<150)
+	tab_decors[clamp_min_max(i_e-i,0,1000)][clamp_min_max(j_e+j,0,1000)] +=largeur-((i+j)/2);
+    }
 }
   
 
 int main(int argc, char**argv){
   //INITIALISATION
+ time_t t;
+  srand((unsigned) time(&t));
 
   r_sphere_joueur=5;
   int i,j,y;
@@ -742,41 +770,47 @@ int main(int argc, char**argv){
   V_90 = init_float3(0,1,0);
   V_UP = init_float3(0,0,1);
 
-  V_90_INIT = V_90;
-  V_UP_INIT = V_UP;
+  // V_90_INIT = V_90;
+  //V_UP_INIT = V_UP;
   
   // Initialisation décors
-
+  
   nuages=0;
-
-  time_t t;
-  srand((unsigned) time(&t));
-
-  for ( i = 0 ; i < 500 ; i++){
-    for ( j = 0 ; j < 500 ; j++){
+ fprintf(stderr,"VECT: %f %f %f \n",V_UP.x,V_UP.y,V_UP.z);
+  fprintf(stderr,"VEC90: %f %f %f \n",V_90.x,V_90.y,V_90.z);
+  fprintf(stderr,"VEC: %f %f %f \n",V_DIR.x,V_DIR.y,V_DIR.z);
+    
+ 
+  for ( i = 0 ; i < 1000 ; i++){
+    for ( j = 0 ; j < 1000 ; j++){
       rand_seed=rand()%30+1;
 
       tab_decors[i][j]=mapFloat((rand()/rand_seed)%5,0,5,-10,20);
     }
   }
-
-  for ( i = 0 ; i < 500 ;i++ )
+  
+  for ( i = 0 ; i < 1000 ;i++ )
     tab_decors[i][150] = -50;
-
-
-  for ( i =0 ; i<30 ; i++)
-    mountain(rand()%500,rand()%500,rand()%150+30);
+  
+  
+  for ( i =0 ; i<50 ; i++)
+  mountain(rand()%1000,rand()%1000,rand()%150+30);
   
   for (  i = 0 ; i < 16; i++)   aplanir();
 
-
+  
   init_arbres();
+
+  karbre8=cons_arbre(tab_arbre,tab_decors);
+  
   init_lait();
+  
   
   fprintf(stderr,"VECT: %f %f %f \n",V_UP.x,V_UP.y,V_UP.z);
   fprintf(stderr,"VEC90: %f %f %f \n",V_90.x,V_90.y,V_90.z);
   fprintf(stderr,"VEC: %f %f %f \n",V_DIR.x,V_DIR.y,V_DIR.z);
 
+  
   glutInit(&argc,argv);
   //Init affichage
   glutInitDisplayMode(GLUT_RGBA|GLUT_SINGLE|GLUT_DEPTH);
@@ -795,8 +829,8 @@ int main(int argc, char**argv){
   glutKeyboardUpFunc(keyUp);
   glutDisplayFunc(affichage);
   //gestionnaire GLUT
+
+  //printf("TEST LA : %d\n",sizeof(tab_arbre[0]));
   glutMainLoop();
-
-
   return EXIT_SUCCESS;
 }

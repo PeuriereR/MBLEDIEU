@@ -52,3 +52,30 @@ karbre kConsArbre(element e,...){
 	
   return k;
 }
+
+karbre copie_karbre(karbre k){
+  // explicite
+  karbre kopie=kArbreVide();
+  if (k==NULL) return NULL;
+  if (k->vide==-1)
+    return kopie;
+  if (k->vide==0){
+    kopie->vide=0;
+    return kopie;
+  }
+  if (k->vide==1){
+    kopie->vide=1;
+    return kopie;
+  }
+  return kConsArbre(-2,
+		    copie_karbre(k->fils[0]),
+		    copie_karbre(k->fils[1]),
+		    copie_karbre(k->fils[2]),
+		    copie_karbre(k->fils[3]),
+		    copie_karbre(k->fils[4]),
+		    copie_karbre(k->fils[5]),
+		    copie_karbre(k->fils[6]),
+		    copie_karbre(k->fils[7])
+		    );
+
+}
