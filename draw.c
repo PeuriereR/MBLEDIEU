@@ -1,4 +1,3 @@
-
 #include "draw.h"
 
 void affiche_cube_plein(float3 p1, float3 p2, float opacity){
@@ -125,11 +124,13 @@ void affiche_cube(float3 p1, float3 p2){
 }
 
 
-void dessin_carton_lait(float x_, float y_, float z_, float size){
+void dessin_carton_lait(){
   // x_, y_, z_ sont les coordonnées du centre de l'objet
   // size est le facteur d'échelle
 
-  float x,y,z;
+  float x_,y_,z_,x,y,z;
+  x_=y_=z_=0;
+  float size=1;
   float cote=1;
   float haut=1.3;
   float haut2=1.5;
@@ -146,7 +147,7 @@ void dessin_carton_lait(float x_, float y_, float z_, float size){
   glBegin(GL_QUADS);
 
   // face inférieure
-  couleur(GRIS);
+  couleur(ROUGE);
   glVertex3f(x     , y     , z     );
   glVertex3f(x+cote, y     , z     );
   glVertex3f(x+cote, y+cote, z     );
@@ -154,7 +155,7 @@ void dessin_carton_lait(float x_, float y_, float z_, float size){
 
 
   // face avant 
-  couleur(GRIS);
+  couleur(ROUGE);
   glVertex3f(x     , y     , z     );
   glVertex3f(x+cote, y     , z     );
   glVertex3f(x+cote, y     , z+haut);
@@ -162,7 +163,7 @@ void dessin_carton_lait(float x_, float y_, float z_, float size){
 
 
   // face arrière
-  couleur(GRIS);
+  couleur(ROUGE);
   glVertex3f(x     , y+cote, z     );
   glVertex3f(x+cote, y+cote, z     );
   glVertex3f(x+cote, y+cote, z+haut);
@@ -170,7 +171,7 @@ void dessin_carton_lait(float x_, float y_, float z_, float size){
 
   
   // face droite
-  couleur(GRIS);
+  couleur(ROUGE);
   glVertex3f(x+cote, y     , z     );
   glVertex3f(x+cote, y+cote, z     );
   glVertex3f(x+cote, y+cote, z+haut);
@@ -178,7 +179,7 @@ void dessin_carton_lait(float x_, float y_, float z_, float size){
 
   
   // face gauche
-  couleur(GRIS);  
+  couleur(ROUGE);  
   glVertex3f(x     , y     , z     );
   glVertex3f(x     , y+cote, z     );
   glVertex3f(x     , y+cote, z+haut);
@@ -210,26 +211,33 @@ void dessin_arbre2(){
   glBegin(GL_QUADS);
 
   /* PIED*/
-  glVertex3f(1,1,-15);
-  glVertex3f(-1,1,-15);
+  glVertex3f(1,1,-5);
+  glVertex3f(-1,1,-5);
   glVertex3f(-1,1,3);
   glVertex3f(1,1,3);
 
-  glVertex3f(1,1,-15);
-  glVertex3f(1,-1,-15);
+  glVertex3f(1,1,-5);
+  glVertex3f(1,-1,-5);
   glVertex3f(1,-1,3);
   glVertex3f(1,1,3);
 
-  glVertex3f(1,-1,-15);
-  glVertex3f(-1,-1,-15);
+  glVertex3f(1,-1,-5);
+  glVertex3f(-1,-1,-5);
   glVertex3f(-1,-1,3);
   glVertex3f(1,-1,3);
 
-  glVertex3f(-1,-1,-15);
-  glVertex3f(-1,1,-15);
+  glVertex3f(-1,-1,-5);
+  glVertex3f(-1,1,-5);
   glVertex3f(-1,1,3);
   glVertex3f(-1,-1,3);
 
+
+
+  
+  glVertex3f(1,1,-3);
+  glVertex3f(-1,1,-3);
+  glVertex3f(-1,-1,-3);
+  glVertex3f(1,-1,3);
   glEnd();
   
   /*DESSUS */
@@ -291,16 +299,16 @@ void dessin_arbre2(){
   /* ligne cube */
 
   
-  glVertex3f(1,1,-15);
+  glVertex3f(1,1,-5);
   glVertex3f(1,1,3);
 
-  glVertex3f(1,-1,-15);
+  glVertex3f(1,-1,-5);
   glVertex3f(1,-1,3);
 
-  glVertex3f(-1,-1,-15);
+  glVertex3f(-1,-1,-5);
   glVertex3f(-1,-1,3);
 
-  glVertex3f(-1,1,-15);
+  glVertex3f(-1,1,-5);
   glVertex3f(-1,1,3);
 
   glEnd();
@@ -313,4 +321,6 @@ void couleur(int c){
     glColor3f(0.9, 0.9, 0.9);
   if (c==BLEU)
     glColor3f(0.2, 0.2, 0.9);
+  if (c==ROUGE)
+    glColor3f(1,0,0);
 }

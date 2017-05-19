@@ -11,6 +11,8 @@ float r_sphere_joueur;
 int nuages;
 float tab_arbre[500][2];
 float tab_decors[500][500];
+float tab_lait[200][2];
+
 int rand_seed;
 int nuages_toggle=1;
 int auto_scroll_toggle=1;
@@ -76,7 +78,7 @@ void aplanir(){
 }
 
 void init_arbres(){
-  /* 200 arbres random, 30 bosquets de 20 arbres */
+  /* 200 arbres random, 29 bosquets de 1+9 arbres */
   
   int i,j;
   for(i=0; i<200; i++){
@@ -84,14 +86,14 @@ void init_arbres(){
     tab_arbre[i][1]=rand()%490+1;
 
   }
-  int indice=100;
-  for(i=0; i<30; i++){// 10*15
+  int indice=200;
+  for(i=0; i<29; i++){// 10*15
     int randx=rand()%490+1;
     int randy=rand()%490+1;
     tab_arbre[indice][0]=randx;
     tab_arbre[indice][1]=randy;
     indice++;
-    for(j=0;j<20;j++){
+    for(j=0;j<9;j++){
       int signe=rand()%2-1;
       if (signe==0) signe=1;
       tab_arbre[indice][0]=clamp_min_max(randx+signe*rand()%30,10,490);
@@ -104,6 +106,25 @@ void init_arbres(){
   arbre++;
 }
 
+
+void init_lait(){
+  int i;
+  for(i=0; i<200; i++){
+    tab_lait[i][0]=rand()%300+100;
+    tab_lait[i][1]=rand()%300+100;
+  }
+}
+
+void dessin_lait(){
+  int i;
+  for(i=0; i<200; i++){
+    glPushMatrix();
+    glTranslatef(tab_lait[i][0],tab_lait[i][1],tab_decors[(int)tab_lait[i][0]][(int)tab_lait[i][1]]);
+    glScalef(2,2,2);
+    dessin_carton_lait();
+    glPopMatrix();
+  }
+}
 
 void dessin_arbre(){
   int i;
@@ -479,7 +500,12 @@ void affichage(){
 
   
   dessin_arbre();
+  dessin_lait();
 
+
+  dessin_carton_lait();
+
+  
     
   /*
     affichage_pt(p1);
@@ -662,12 +688,12 @@ void keyPressed (unsigned char key, int x, int y) {
 void mountain(int i_e, int j_e, int largeur){
   int i,j;
   // 150 est la hauteur max > probleme des bords
-  /*
+  
   for(i=0;i<500;i++)
-    for(j=0;j<500j<++)
-      if (tab_decors[i][j]>50)
-	fprintf(stderr("PRE- %f  ij %d %d\n",tab_decors[i][j],i,j);
-  */
+    for(j=0;j<500;j++)
+      if (tab_decors[i][j]>150)
+	fprintf(stderr,"PRE- %f  ij %d %d\n",tab_decors[i][j],i,j);
+  
   for ( i = largeur ; i > 0 ;i-- )
     for ( j = largeur ; j > 0 ;j-- ){
       if(tab_decors[clamp_min_max(i_e+i,0,500)][clamp_min_max(j_e+j,0,500)]+largeur<150)
@@ -676,7 +702,7 @@ void mountain(int i_e, int j_e, int largeur){
 	tab_decors[clamp_min_max(i_e+i,0,500)][clamp_min_max(j_e-j,0,500)] +=largeur-((i+j)/2);
       if( tab_decors[clamp_min_max(i_e-i,0,500)][clamp_min_max(j_e-j,0,500)]+largeur<150)
 	tab_decors[clamp_min_max(i_e-i,0,500)][clamp_min_max(j_e-j,0,500)] +=largeur-((i+j)/2);
-      if( tab_decors[clamp_min_max(i_e-i,0,500)][clamp_min_max(j_e-j,0,500)]+largeur<150)
+      if( tab_decors[clamp_min_max(i_e-i,0,500)][clamp_min_max(j_e+j,0,500)]+largeur<150)
 	tab_decors[clamp_min_max(i_e-i,0,500)][clamp_min_max(j_e+j,0,500)] +=largeur-((i+j)/2);
       /*
       fprintf(stderr,"TEST\n\t %f\t %f\t %f\t %f\n",
@@ -685,11 +711,11 @@ void mountain(int i_e, int j_e, int largeur){
 	      tab_decors[clamp_min_max(i_e-i,0,500)][clamp_min_max(j_e-j,0,500)] ,
 	      tab_decors[clamp_min_max(i_e-i,0,500)][clamp_min_max(j_e+j,0,500)]);*/
 	      }
-  /*
+  
   for(i=0;i<500;i++)
-    for(j=0;j<500j<++)
-      if (tab_decors[i][j]>50)
-      fprintf(stderr("PRE- %f  ij %d %d\n",tab_decors[i][j],i,j);*/
+    for(j=0;j<500;j++)
+      if (tab_decors[i][j]>150)
+	fprintf(stderr,"POST- %f  ij %d %d\n",tab_decors[i][j],i,j);
 }
   
 
@@ -745,6 +771,7 @@ int main(int argc, char**argv){
 
 
   init_arbres();
+  init_lait();
   
   fprintf(stderr,"VECT: %f %f %f \n",V_UP.x,V_UP.y,V_UP.z);
   fprintf(stderr,"VEC90: %f %f %f \n",V_90.x,V_90.y,V_90.z);
