@@ -84,24 +84,28 @@ void init_arbres(){
     tab_arbre[i][1]=rand()%490+1;
 
   }
-  int indice=100;
-  for(i=0; i<30; i++){// 10*15
+  int indice=200;
+  
+  for(i=0; i<29; i++){// 10*15
     int randx=rand()%490+1;
     int randy=rand()%490+1;
     tab_arbre[indice][0]=randx;
     tab_arbre[indice][1]=randy;
     indice++;
-    for(j=0;j<20;j++){
+    for(j=0;j<9;j++){
       int signe=rand()%2-1;
       if (signe==0) signe=1;
       tab_arbre[indice][0]=clamp_min_max(randx+signe*rand()%30,10,490);
       signe=rand()%2-1;
       if (signe==0) signe=1;
       tab_arbre[indice][1]=clamp_min_max(randy+signe*rand()%30,10,490);
-      indice++;
+         indice++;
+	 printf("%d\n",indice);
     }
+    
   }
   arbre++;
+  
 }
 
 
@@ -145,7 +149,7 @@ void dessin_grille(){
     for ( i = 0; i < bS; i+=pas ){
 
       // changement couleurs( nuages )
-      c = mapFloat(tab_decors[(i+nuages)%497][(j+nuages)%497],0,5,0,1);
+      c = mapFloat(tab_decors[(i+nuages)%497][(j+nuages)%497],0,200,0,1);
       glColor3f(c,c,c);
       // glColor3f(.5,.5,.5);
       
@@ -154,7 +158,7 @@ void dessin_grille(){
       glVertex3f(i+pas, j, tab_decors[i+pas][j]);
 
       // changement couleurs (nuages )
-      c = mapFloat(tab_decors[(i+nuages)%497][(j+nuages)%497],0,5,0,1);
+      c = mapFloat(tab_decors[(i+nuages)%497][(j+nuages)%497],0,200,0,1);
       glColor3f(c,c,c);
       //  glColor3f(.8,.8,.8);
       
@@ -296,8 +300,9 @@ void gestion_input(){
       float3 save_PV=V_UP;
     */
     V_DIR=rodrigues(0.8,V_DIR,V_90);
-    V_UP=produit_vectoriel(V_DIR,V_90);/*    
-					     /* Pour contrer le renversement du vecteur par double produit vectoriel */
+    V_UP=produit_vectoriel(V_DIR,V_90);
+    /*    
+	  /* Pour contrer le renversement du vecteur par double produit vectoriel */
     /*
       if (save_PV.x* V_UP.x+save_PV.y* V_UP.y+ save_PV.z* V_UP.z < cos(M_PI/180)){
       V_UP.x=- V_UP.x;
@@ -344,6 +349,7 @@ void affichage(){
   
   glFrustum(-10,10,-10,10,10,10000);
   //gluPerspective(100,1,0.1,1000);
+  
   gluLookAt(centre_cube.x-30*V_DIR.x +  V_UP.x*8 ,
 	    centre_cube.y-30*V_DIR.y +  V_UP.y*8 ,
 	    centre_cube.z-30*V_DIR.z +  V_UP.z*8 ,
@@ -354,6 +360,7 @@ void affichage(){
 	    V_UP.y,
 	    V_UP.z
 	    );
+  
   /*
     gluLookAt(centre_cube.x-30*V_DIR.x +  V_UP.x*8 ,
     centre_cube.y-30*V_DIR.y +  V_UP.y*8 ,
@@ -367,7 +374,7 @@ void affichage(){
     );
   */  
   
-  //gluLookAt(-70,-20,70,10,50,10,0,0,1);
+    //  gluLookAt(-70,-20,70,10,50,10,0,0,1);
 
 
   for( i=0; i<50; i++){
@@ -676,7 +683,7 @@ void mountain(int i_e, int j_e, int largeur){
 	tab_decors[clamp_min_max(i_e+i,0,500)][clamp_min_max(j_e-j,0,500)] +=largeur-((i+j)/2);
       if( tab_decors[clamp_min_max(i_e-i,0,500)][clamp_min_max(j_e-j,0,500)]+largeur<150)
 	tab_decors[clamp_min_max(i_e-i,0,500)][clamp_min_max(j_e-j,0,500)] +=largeur-((i+j)/2);
-      if( tab_decors[clamp_min_max(i_e-i,0,500)][clamp_min_max(j_e-j,0,500)]+largeur<150)
+      if( tab_decors[clamp_min_max(i_e-i,0,500)][clamp_min_max(j_e+j,0,500)]+largeur<150)
 	tab_decors[clamp_min_max(i_e-i,0,500)][clamp_min_max(j_e+j,0,500)] +=largeur-((i+j)/2);
       /*
       fprintf(stderr,"TEST\n\t %f\t %f\t %f\t %f\n",
@@ -695,6 +702,8 @@ void mountain(int i_e, int j_e, int largeur){
 
 int main(int argc, char**argv){
   //INITIALISATION
+ time_t t;
+  srand((unsigned) time(&t));
 
   r_sphere_joueur=5;
   int i,j,y;
@@ -716,16 +725,17 @@ int main(int argc, char**argv){
   V_90 = init_float3(0,1,0);
   V_UP = init_float3(0,0,1);
 
-  V_90_INIT = V_90;
-  V_UP_INIT = V_UP;
+  // V_90_INIT = V_90;
+  //V_UP_INIT = V_UP;
   
   // Initialisation décors
-
+  
   nuages=0;
-
-  time_t t;
-  srand((unsigned) time(&t));
-
+ fprintf(stderr,"VECT: %f %f %f \n",V_UP.x,V_UP.y,V_UP.z);
+  fprintf(stderr,"VEC90: %f %f %f \n",V_90.x,V_90.y,V_90.z);
+  fprintf(stderr,"VEC: %f %f %f \n",V_DIR.x,V_DIR.y,V_DIR.z);
+    
+ 
   for ( i = 0 ; i < 500 ; i++){
     for ( j = 0 ; j < 500 ; j++){
       rand_seed=rand()%30+1;
@@ -733,17 +743,17 @@ int main(int argc, char**argv){
       tab_decors[i][j]=mapFloat((rand()/rand_seed)%5,0,5,-10,20);
     }
   }
-
+  
   for ( i = 0 ; i < 500 ;i++ )
     tab_decors[i][150] = -50;
-
+  
 
   for ( i =0 ; i<30 ; i++)
     mountain(rand()%500,rand()%500,rand()%150+30);
   
   for (  i = 0 ; i < 16; i++)   aplanir();
 
-
+  
   init_arbres();
   
   fprintf(stderr,"VECT: %f %f %f \n",V_UP.x,V_UP.y,V_UP.z);
