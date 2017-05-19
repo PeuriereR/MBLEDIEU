@@ -1,7 +1,9 @@
 #include "karbre.h"
 #include "float3.h"
-#define BLEU 1
-#define GRIS 2
+#include "draw.h"
+
+int pppp=1;
+
 // Variables detection collision
 float r_sphere_joueur;
 
@@ -19,9 +21,6 @@ int arbre=1;
 float angle=0;
 float angle_tangage=0;
 
-float r;
-
-
 //touches
 int key_q, key_d, key_s, key_z, key_m, key_p;
 
@@ -38,73 +37,6 @@ float3 V_UP_INIT;
 float3 V_90_INIT;
 float3 tab_proj[50][3];
 
-
-
-void couleur(int c){
-  if (c==GRIS)
-    glColor3f(0.9, 0.9, 0.9);
-  if (c==BLEU)
-    glColor3f(0.2, 0.2, 0.9);
-  
-
-}
-
-void affiche_cube_plein(float3 p1, float3 p2, float opacity){
-  
-  glBegin(GL_QUADS);
-  
-  // face dessous
-  
-  glColor4f(1,1,0,opacity);
-  glVertex3f(p1.x,p1.y,p1.z);
-  glVertex3f(p2.x,p1.y,p1.z);
-  glVertex3f(p2.x,p1.y,p2.z);
-  glVertex3f(p1.x,p1.y,p2.z);
-
-  // face dessus
-  
-  glColor4f(1,0.5,0,opacity);
-  glVertex3f(p1.x,p2.y,p1.z);
-  glVertex3f(p2.x,p2.y,p1.z);
-  glVertex3f(p2.x,p2.y,p2.z);
-  glVertex3f(p1.x,p2.y,p2.z);
-
-  // face devant
-  
-  glColor4f(1,0,1,opacity);
-  glVertex3f(p1.x,p1.y,p1.z);
-  glVertex3f(p2.x,p1.y,p1.z);
-  glVertex3f(p2.x,p2.y,p1.z);
-  glVertex3f(p1.x,p2.y,p1.z);
-
-  // face derriere
-  
-  glColor4f(1,0,0,opacity);
-  glVertex3f(p2.x,p1.y,p2.z);
-  glVertex3f(p1.x,p1.y,p2.z);
-  glVertex3f(p1.x,p2.y,p2.z);
-  glVertex3f(p2.x,p2.y,p2.z);
-
-  //face gauche
-  
-  glColor4f(0,1,0,opacity);
-  glVertex3f(p1.x,p1.y,p1.z);
-  glVertex3f(p1.x,p1.y,p2.z);
-  glVertex3f(p1.x,p2.y,p2.z);
-  glVertex3f(p1.x,p2.y,p1.z);
-  
-  //face droite
-  
-  glColor4f(0,0,1,opacity);
-  glVertex3f(p2.x,p1.y,p1.z);
-  glVertex3f(p2.x,p1.y,p2.z);
-  glVertex3f(p2.x,p2.y,p2.z);
-  glVertex3f(p2.x,p2.y,p1.z);
-  
-  glEnd();
-  
-
-}
 
 int clamp_min_max(int n, int min, int max){
   if (n<min) return min;
@@ -143,227 +75,45 @@ void aplanir(){
 
 }
 
-void dessin_arbre2(){
-  /* glScalef a passer en param
-     + translate */
-  glColor3f(.8,.8,.8);
-  glBegin(GL_QUADS);
-
-  /* PIED*/
-  glVertex3f(1,1,-15);
-  glVertex3f(-1,1,-15);
-  glVertex3f(-1,1,3);
-  glVertex3f(1,1,3);
-
-  glVertex3f(1,1,-15);
-  glVertex3f(1,-1,-15);
-  glVertex3f(1,-1,3);
-  glVertex3f(1,1,3);
-
-  glVertex3f(1,-1,-15);
-  glVertex3f(-1,-1,-15);
-  glVertex3f(-1,-1,3);
-  glVertex3f(1,-1,3);
-
-  glVertex3f(-1,-1,-15);
-  glVertex3f(-1,1,-15);
-  glVertex3f(-1,1,3);
-  glVertex3f(-1,-1,3);
-
-  glEnd();
+void init_arbres(){
+  /* 200 arbres random, 30 bosquets de 20 arbres */
   
-  /*DESSUS */
-  
-  glColor3f(.2,.25,.2);
-  glBegin(GL_TRIANGLES);
+  int i,j;
+  for(i=0; i<200; i++){
+    tab_arbre[i][0]=rand()%490+1;
+    tab_arbre[i][1]=rand()%490+1;
 
-  glVertex3f(4,4,3);
-  glVertex3f(-4,4,3);
-  glVertex3f(0,0,15);
-
-  glVertex3f(4,4,3);
-  glVertex3f(4,-4,3);
-  glVertex3f(0,0,15);
-
-  glVertex3f(4,-4,3);
-  glVertex3f(-4,-4,3);
-  glVertex3f(0,0,15);
-
-  glVertex3f(-4,-4,3);
-  glVertex3f(-4,4,3);
-  glVertex3f(0,0,15);
-
-  glEnd();
-
-  glColor3f(.1,.1,.1);
-  glLineWidth(1.5);
-  glBegin(GL_LINES);
-  /* lignes arbre */
-  /* vertical */
-  glVertex3f(4,4,3);
-  glVertex3f(0,0,15);
-  
-  glVertex3f(-4,4,3);
-  glVertex3f(0,0,15);
-
-  
-  glVertex3f(4,-4,3);
-  glVertex3f(0,0,15);
-
-  
-  glVertex3f(-4,-4,3);
-  glVertex3f(0,0,15);
-  /* horizontal*/
-  
-  glVertex3f(4,4,3);
-  glVertex3f(-4,4,3);
-  
-  glVertex3f(4,4,3);
-  glVertex3f(4,-4,3);
-
-  glVertex3f(4,-4,3);
-  glVertex3f(-4,-4,3);
-
-  glVertex3f(-4,-4,3);
-  glVertex3f(-4,4,3);
-  
-
-  /* ligne cube */
-
-  
-  glVertex3f(1,1,-15);
-  glVertex3f(1,1,3);
-
-  glVertex3f(1,-1,-15);
-  glVertex3f(1,-1,3);
-
-  glVertex3f(-1,-1,-15);
-  glVertex3f(-1,-1,3);
-
-  glVertex3f(-1,1,-15);
-  glVertex3f(-1,1,3);
-
-  glEnd();
-  glLineWidth(1);
-
+  }
+  int indice=100;
+  for(i=0; i<30; i++){// 10*15
+    int randx=rand()%490+1;
+    int randy=rand()%490+1;
+    tab_arbre[indice][0]=randx;
+    tab_arbre[indice][1]=randy;
+    indice++;
+    for(j=0;j<20;j++){
+      int signe=rand()%2-1;
+      if (signe==0) signe=1;
+      tab_arbre[indice][0]=clamp_min_max(randx+signe*rand()%30,10,490);
+      signe=rand()%2-1;
+      if (signe==0) signe=1;
+      tab_arbre[indice][1]=clamp_min_max(randy+signe*rand()%30,10,490);
+      indice++;
+    }
+  }
+  arbre++;
 }
+
 
 void dessin_arbre(){
-  int i,j;
-  if (arbre==1){
-    for(i=0; i<200; i++){
-      tab_arbre[i][0]=rand()%490+1;
-      tab_arbre[i][1]=rand()%490+1;
-
-    }
-    int indice=100;
-    for(i=0; i<30; i++){// 10*15
-      int randx=rand()%490+1;
-      int randy=rand()%490+1;
-      tab_arbre[indice][0]=randx;
-      tab_arbre[indice][1]=randy;
-      indice++;
-      for(j=0;j<20;j++){
-	int signe=rand()%2-1;
-	if (signe==0) signe=1;
-	tab_arbre[indice][0]=clamp_min_max(randx+signe*rand()%30,10,490);
-	signe=rand()%2-1;
-	if (signe==0) signe=1;
-	tab_arbre[indice][1]=clamp_min_max(randy+signe*rand()%30,10,490);
-	indice++;
-      }
-    }
-    arbre++;
+  int i;
+  for(i=0; i<250; i++){
+    glPushMatrix();
+    glTranslatef(tab_arbre[i][0],tab_arbre[i][1],tab_decors[(int)tab_arbre[i][0]][(int)tab_arbre[i][1]]);
+    glScalef(0.5,.5,.5);
+    dessin_arbre2();
+    glPopMatrix();
   }
-  else{
-
-    for(i=0; i<250; i++){
-	
-      glPushMatrix();
-      glTranslatef(tab_arbre[i][0],tab_arbre[i][1],tab_decors[(int)tab_arbre[i][0]][(int)tab_arbre[i][1]]);
-      glScalef(0.5,.5,.5);
-      dessin_arbre2();
-      glPopMatrix();
-    }
-
-  }
-}
-
-void dessin_carton_lait(float x_, float y_, float z_, float size){
-  // x_, y_, z_ sont les coordonnées du centre de l'objet
-  // size est le facteur d'échelle
-
-  float x,y,z;
-  float cote=1;
-  float haut=1.3;
-  float haut2=1.5;
-  float d_cote;
-  cote*=size;
-  haut*=size;
-  haut2*=size;
-  d_cote=cote/2;
-  x=x_-d_cote;
-  y=y_-d_cote;
-  z=z_-d_cote;
-
- 
-  glBegin(GL_QUADS);
-
-  // face inférieure
-  couleur(GRIS);
-  glVertex3f(x     , y     , z     );
-  glVertex3f(x+cote, y     , z     );
-  glVertex3f(x+cote, y+cote, z     );
-  glVertex3f(x     , y+cote, z     );
-
-
-  // face avant 
-  couleur(GRIS);
-  glVertex3f(x     , y     , z     );
-  glVertex3f(x+cote, y     , z     );
-  glVertex3f(x+cote, y     , z+haut);
-  glVertex3f(x     , y     , z+haut);
-
-
-  // face arrière
-  couleur(GRIS);
-  glVertex3f(x     , y+cote, z     );
-  glVertex3f(x+cote, y+cote, z     );
-  glVertex3f(x+cote, y+cote, z+haut);
-  glVertex3f(x     , y+cote, z+haut);
-
-  
-  // face droite
-  couleur(GRIS);
-  glVertex3f(x+cote, y     , z     );
-  glVertex3f(x+cote, y+cote, z     );
-  glVertex3f(x+cote, y+cote, z+haut);
-  glVertex3f(x+cote, y     , z+haut);
-
-  
-  // face gauche
-  couleur(GRIS);  
-  glVertex3f(x     , y     , z     );
-  glVertex3f(x     , y+cote, z     );
-  glVertex3f(x     , y+cote, z+haut);
-  glVertex3f(x     , y     , z+haut);
-
-  // pan toit 1
-  couleur(BLEU);  
-  glVertex3f(x     , y       , z+haut);
-  glVertex3f(x+cote, y       , z+haut);
-  glVertex3f(x+cote, y+d_cote, z+haut2);
-  glVertex3f(x     , y+d_cote, z+haut2);
-
-  // pan toit 2  
-  couleur(BLEU);  
-  glVertex3f(x     , y+cote  , z+haut);
-  glVertex3f(x+cote, y+cote  , z+haut);
-  glVertex3f(x+cote, y+d_cote, z+haut2);
-  glVertex3f(x     , y+d_cote, z+haut2);
-  
-  glEnd();
-
 }
 
 
@@ -387,7 +137,7 @@ void dessin_grille(){
   if (nuages>497) nuages=0;
 
   if (!nuages_toggle)
-  nuages=0;
+    nuages=0;
   
   for ( j = 0; j < bS; j+=pas ){
 
@@ -424,71 +174,6 @@ void dessin_grille(){
 
   // afficher_axes();
 }
-void affiche_cube(float3 p1, float3 p2){
-  
-
-  glLineWidth(1.5);
-  glBegin(GL_LINES);
-  // face dessous
-  
-  glColor4f(1,1,0,1);
-  glVertex3f(p1.x,p1.y,p1.z);
-  glVertex3f(p2.x,p1.y,p1.z);
-
-  glVertex3f(p2.x,p1.y,p1.z);
-  glVertex3f(p2.x,p1.y,p2.z);
-  
-  glVertex3f(p2.x,p1.y,p2.z);
-  glVertex3f(p1.x,p1.y,p2.z);
-
-  glVertex3f(p1.x,p1.y,p2.z);
-  glVertex3f(p1.x,p1.y,p1.z);
-
-  // face dessus
-  
-  glColor4f(1,0.5,0,1);
-
-  glVertex3f(p1.x,p2.y,p1.z);
-  glVertex3f(p2.x,p2.y,p1.z);
-
-  glVertex3f(p2.x,p2.y,p1.z);
-  glVertex3f(p2.x,p2.y,p2.z);
-
-  glVertex3f(p2.x,p2.y,p2.z);
-  glVertex3f(p1.x,p2.y,p2.z);
-
-  glVertex3f(p1.x,p2.y,p2.z);
-  glVertex3f(p1.x,p2.y,p1.z);
-
-  // face devant
-  
-  glColor4f(1,0,1,1);
-  glVertex3f(p1.x,p1.y,p1.z);
-  glVertex3f(p1.x,p2.y,p1.z);
-
-  
-  // face derriere
-  
-  glColor4f(1,0,0,1);
-  glVertex3f(p2.x,p1.y,p2.z);
-  glVertex3f(p2.x,p2.y,p2.z);
-  
-  //face gauche
-  
-  glColor4f(0,1,0,1);
-  glVertex3f(p1.x,p1.y,p2.z);
-  glVertex3f(p1.x,p2.y,p2.z);
-  
-  //face droite
-  
-  glColor4f(0,0,1,1);
-  glVertex3f(p2.x,p1.y,p1.z);
-  glVertex3f(p2.x,p2.y,p1.z);
-  
-  
-  glEnd();
-  glLineWidth(1);
-}
 
 void projectile(float3 direction,float3 m1, float3 m2){
   int i;
@@ -509,16 +194,16 @@ void projectile(float3 direction,float3 m1, float3 m2){
 void gestion_input(){
   /* Solution patarasse pour empecher la destruction des vecteurs */
   /*
-  if (key_d == 1 && key_p == 1)
+    if (key_d == 1 && key_p == 1)
     key_d=2;
   
-  if (key_q == 1 && key_p == 1)
+    if (key_q == 1 && key_p == 1)
     key_q=2;
   
-  if (key_d == 1 && key_m == 1)
+    if (key_d == 1 && key_m == 1)
     key_d=2;
   
-  if (key_q == 1 && key_m == 1)
+    if (key_q == 1 && key_m == 1)
     key_q=2;
   */
 
@@ -559,7 +244,7 @@ void gestion_input(){
 
     /* FORMULE DE RODRIGUES */
     /* Rotation autour de l'axe DIR du VECTEUR_90*/
-      V_90=rodrigues(-.8,V_90,V_DIR);
+    V_90=rodrigues(-.8,V_90,V_DIR);
     /* On reactualise le V_UP */
     V_UP=produit_vectoriel(V_DIR,V_90);
  
@@ -567,12 +252,12 @@ void gestion_input(){
   if (key_d == 1){
     // ROTATION: Angle_tangage
     /*
-    angle=angle-d_angle;
-    if (angle<=0)
+      angle=angle-d_angle;
+      if (angle<=0)
       angle=360;
     */
     /* Rotation autour de l'axe DIR du VECTEUR_90*/
-      V_90=rodrigues(.8,V_90,V_DIR);
+    V_90=rodrigues(.8,V_90,V_DIR);
     /* On reactualise le V_UP */
     V_UP=produit_vectoriel(V_DIR,V_90);
     
@@ -590,8 +275,8 @@ void gestion_input(){
       p2.z-=0.5;
     
     
-    angle_tangage=angle_tangage-0.2;
-    if (angle_tangage<=-360)
+      angle_tangage=angle_tangage-0.2;
+      if (angle_tangage<=-360)
       angle_tangage=0;
     */
     V_DIR=rodrigues(-0.8,V_DIR,V_90);
@@ -604,21 +289,21 @@ void gestion_input(){
       p2.z+=0.5;
     */
     /*
-    angle_tangage=angle_tangage+0.2;
-    if (angle_tangage>=360)
+      angle_tangage=angle_tangage+0.2;
+      if (angle_tangage>=360)
       angle_tangage=0;
 
-    float3 save_PV=V_UP;
+      float3 save_PV=V_UP;
     */
     V_DIR=rodrigues(0.8,V_DIR,V_90);
     V_UP=produit_vectoriel(V_DIR,V_90);/*    
 					     /* Pour contrer le renversement du vecteur par double produit vectoriel */
     /*
-    if (save_PV.x* V_UP.x+save_PV.y* V_UP.y+ save_PV.z* V_UP.z < cos(M_PI/180)){
+      if (save_PV.x* V_UP.x+save_PV.y* V_UP.y+ save_PV.z* V_UP.z < cos(M_PI/180)){
       V_UP.x=- V_UP.x;
       V_UP.y=- V_UP.y;
       V_UP.z=- V_UP.z;
-    }
+      }
     */
   }
   glutPostRedisplay();
@@ -644,17 +329,13 @@ void affichage(){
 
   // Detection des collisions basique
   /*
-  if((p1.z+p2.z)/2<=tab_decors[(int)(p1.x+p2.x)/2][(int)(p1.y+p2.y)/2])
-  printf("x:%f y:%f z:%f\n",(p1.x+p2.x)/2,(p1.y+p2.y)/2,(p1.z+p2.z)/2);
-  else printf("\n");
+    if((p1.z+p2.z)/2<=tab_decors[(int)(p1.x+p2.x)/2][(int)(p1.y+p2.y)/2])
+    printf("x:%f y:%f z:%f\n",(p1.x+p2.x)/2,(p1.y+p2.y)/2,(p1.z+p2.z)/2);
+    else printf("\n");
   */
   gestion_input();
 
-  float3 centre_cube;
-  centre_cube.x=(p1.x+p2.x)/2;
-  centre_cube.y=(p1.y+p2.y)/2;
-  centre_cube.z=(p1.z+p2.z)/2;
-
+  float3 centre_cube=milieu_cube(p1,p2);
 
   glClearColor(0.1,0.1,0.2,0.2);
   glMatrixMode(GL_MODELVIEW);
@@ -744,14 +425,39 @@ void affichage(){
   glVertex3f(centre_cube.x-V_90.x*5,centre_cube.y-V_90.y*5,centre_cube.z-V_90.z*5);
   glVertex3f(centre_cube.x+V_90.x*5,centre_cube.y+V_90.y*5,centre_cube.z+V_90.z*5);
   /*
-  glVertex3f(centre_cube.x-val,centre_cube.y-val,centre_cube.z-val);
-  glVertex3f(centre_cube.x+V_90.x*10-val,centre_cube.y+V_90.y*10-val,centre_cube.z+V_90.z*10-val);
+    glVertex3f(centre_cube.x-val,centre_cube.y-val,centre_cube.z-val);
+    glVertex3f(centre_cube.x+V_90.x*10-val,centre_cube.y+V_90.y*10-val,centre_cube.z+V_90.z*10-val);
   */
   
   glColor4f(0,0,1,0.5);
   glVertex3f( centre_cube.x-val,centre_cube.y-val,centre_cube.z-val);
   glVertex3f( centre_cube.x+V_UP.x*10-val,centre_cube.y+ V_UP.y*10-val,centre_cube.z+ V_UP.z*10-val);
 
+
+
+  glColor4f(0,1,1,1);
+  for(i=0; i<500; i=i+10){
+    glVertex3f(i,0,0);
+  glVertex3f(i,0,300);
+  }
+
+  
+  glVertex3f(0,0,pppp);
+  glVertex3f(500,0,pppp);
+      
+
+
+
+  pppp++;
+  pppp= pppp%300;
+
+
+
+
+
+
+
+  
   glEnd();
   
   p1_hyperC2.x=p1.x-((p2.x-p1.x)/4);
@@ -794,8 +500,8 @@ void affichage(){
     glRotatef(angle_tangage,V_90.x,V_90.y,V_90.z);
   */
   /*
-  glRotatef(angle,V_UP_INIT.x,V_UP_INIT.y,V_UP_INIT.z);
-  glRotatef(angle_tangage,V_90_INIT.x,V_90_INIT.y,V_90_INIT.z);
+    glRotatef(angle,V_UP_INIT.x,V_UP_INIT.y,V_UP_INIT.z);
+    glRotatef(angle_tangage,V_90_INIT.x,V_90_INIT.y,V_90_INIT.z);
   */
   
   glTranslatef(-(p1.x+p2.x)/2,-(p1.y+p2.y)/2,-(p1.z+p2.z)/2);
@@ -873,18 +579,19 @@ void affichage(){
   
     glEnd();
   */
+  
   if (auto_scroll_toggle)
-  {
-p2.x+=.5*V_DIR.x;
-p2.y+=.5*V_DIR.y;
-p2.z+=.5*V_DIR.z;
+    {
+      p2.x+=.5*V_DIR.x;
+      p2.y+=.5*V_DIR.y;
+      p2.z+=.5*V_DIR.z;
 
  
-p1.x+=.5*V_DIR.x;
-p1.y+=.5*V_DIR.y;
-p1.z+=.5*V_DIR.z;
+      p1.x+=.5*V_DIR.x;
+      p1.y+=.5*V_DIR.y;
+      p1.z+=.5*V_DIR.z;
 
-}
+    }
   dessin_grille();
   glutSwapBuffers();
 
@@ -954,36 +661,44 @@ void keyPressed (unsigned char key, int x, int y) {
 
 void mountain(int i_e, int j_e, int largeur){
   int i,j;
+  // 150 est la hauteur max > probleme des bords
+  /*
+  for(i=0;i<500;i++)
+    for(j=0;j<500j<++)
+      if (tab_decors[i][j]>50)
+	fprintf(stderr("PRE- %f  ij %d %d\n",tab_decors[i][j],i,j);
+  */
   for ( i = largeur ; i > 0 ;i-- )
     for ( j = largeur ; j > 0 ;j-- ){
-      if(tab_decors[clamp_min_max(i_e+i,0,500)][clamp_min_max(j_e+j,0,500)]+largeur<50)
+      if(tab_decors[clamp_min_max(i_e+i,0,500)][clamp_min_max(j_e+j,0,500)]+largeur<150)
 	tab_decors[clamp_min_max(i_e+i,0,500)][clamp_min_max(j_e+j,0,500)] +=largeur-((i+j)/2);
-      if(tab_decors[clamp_min_max(i_e+i,0,500)][clamp_min_max(j_e-j,0,500)]+largeur<50)
+      if(tab_decors[clamp_min_max(i_e+i,0,500)][clamp_min_max(j_e-j,0,500)]+largeur<150)
 	tab_decors[clamp_min_max(i_e+i,0,500)][clamp_min_max(j_e-j,0,500)] +=largeur-((i+j)/2);
-      if( tab_decors[clamp_min_max(i_e-i,0,500)][clamp_min_max(j_e-j,0,500)]+largeur<50)
+      if( tab_decors[clamp_min_max(i_e-i,0,500)][clamp_min_max(j_e-j,0,500)]+largeur<150)
 	tab_decors[clamp_min_max(i_e-i,0,500)][clamp_min_max(j_e-j,0,500)] +=largeur-((i+j)/2);
-      if( tab_decors[clamp_min_max(i_e-i,0,500)][clamp_min_max(j_e-j,0,500)]+largeur<50)
+      if( tab_decors[clamp_min_max(i_e-i,0,500)][clamp_min_max(j_e-j,0,500)]+largeur<150)
 	tab_decors[clamp_min_max(i_e-i,0,500)][clamp_min_max(j_e+j,0,500)] +=largeur-((i+j)/2);
-    }
-
+      /*
+      fprintf(stderr,"TEST\n\t %f\t %f\t %f\t %f\n",
+	      tab_decors[clamp_min_max(i_e+i,0,500)][clamp_min_max(j_e+j,0,500)],
+	      tab_decors[clamp_min_max(i_e+i,0,500)][clamp_min_max(j_e-j,0,500)],
+	      tab_decors[clamp_min_max(i_e-i,0,500)][clamp_min_max(j_e-j,0,500)] ,
+	      tab_decors[clamp_min_max(i_e-i,0,500)][clamp_min_max(j_e+j,0,500)]);*/
+	      }
+  /*
+  for(i=0;i<500;i++)
+    for(j=0;j<500j<++)
+      if (tab_decors[i][j]>50)
+      fprintf(stderr("PRE- %f  ij %d %d\n",tab_decors[i][j],i,j);*/
 }
   
 
-
-
-
-
-
-
-
-
-  
 int main(int argc, char**argv){
   //INITIALISATION
 
   r_sphere_joueur=5;
   int i,j,y;
-  float3 init; init.x=-5000;
+  float3 init= init_float3(-5000,-5000,-5000);
   for( i=0;i<50;i++)
     tab_proj[i][0]=init;
   key_q=0;
@@ -992,29 +707,18 @@ int main(int argc, char**argv){
   key_z=0;
   key_m=0;
   key_p=0;
-  
-  p1.x=0;p1.y=0;p1.z=0;
-  p2.x=10;p2.y=10;p2.z=10;
 
-  V_DIR.x=1;
-  V_DIR.y=0;
-  V_DIR.z=0;
-  
-  V_90.x = 0;
-  V_90.y = 1;
-  V_90.z = 0;
-  
-  V_UP.x=0;
-  V_UP.y=0;
-  V_UP.z=1;
+  p1 = init_float3(0,0,0);
+  p2 = init_float3(10,10,10);
 
-  V_90_INIT.x = 0;
-  V_90_INIT.y = 1;
-  V_90_INIT.z = 0;
+  V_DIR = init_float3(1,0,0);
   
-  V_UP_INIT.x=0;
-  V_UP_INIT.y=0;
-  V_UP_INIT.z=1;
+  V_90 = init_float3(0,1,0);
+  V_UP = init_float3(0,0,1);
+
+  V_90_INIT = V_90;
+  V_UP_INIT = V_UP;
+  
   // Initialisation décors
 
   nuages=0;
@@ -1032,19 +736,15 @@ int main(int argc, char**argv){
 
   for ( i = 0 ; i < 500 ;i++ )
     tab_decors[i][150] = -50;
-  
-  
-  for ( i =0 ; i<30 ; i++){
-    mountain(rand()%500,rand()%500,30);
 
-  }
-  //mountain(5,5,20);
-  //mountain(45,45,20);
-  // crevasse
 
+  for ( i =0 ; i<30 ; i++)
+    mountain(rand()%500,rand()%500,rand()%150+30);
   
   for (  i = 0 ; i < 16; i++)   aplanir();
 
+
+  init_arbres();
   
   fprintf(stderr,"VECT: %f %f %f \n",V_UP.x,V_UP.y,V_UP.z);
   fprintf(stderr,"VEC90: %f %f %f \n",V_90.x,V_90.y,V_90.z);

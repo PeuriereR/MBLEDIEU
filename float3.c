@@ -8,7 +8,6 @@ float3 init_float3(float x, float y, float z){
   f.y=y;
   f.z=z;
   return f;
-
 }
 
 float3 mul_float3(float3 f,float n){
@@ -60,4 +59,10 @@ float3 rodrigues(float angle,float3 v1, float3 v2){
     + (sin(angle*M_PI/180)) * pv.z;
 
   return v;
+}
+
+float3 milieu_cube(float3 f1, float3 f2){
+  float3 mil;
+  mil=init_float3((f1.x+f2.x)/2,(f1.y+f2.y)/2,(f1.z+f2.z)/2);
+  return mil;
 }

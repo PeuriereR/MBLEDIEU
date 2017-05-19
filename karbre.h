@@ -1,3 +1,6 @@
+#ifndef KARBRE_H
+#define KARBRE_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -23,3 +26,5 @@ element kRacine (karbre a);
 int kEstVide(karbre a);
 void kAfficher(karbre a);
 void kAfficher2(karbre a, int prof, int fils);
+
+#endif
