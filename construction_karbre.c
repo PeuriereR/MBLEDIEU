@@ -1,6 +1,6 @@
 #include "construction_karbre.h"
 
-elem_coord get_elem_dans_cube(float3* tab_coord,float tab_decors[1000][1000],float3 m1,float3 m2){
+elem_coord get_elem_dans_cube(float3* tab_coord,float** tab_decors,float3 m1,float3 m2){
   int i;
   elem_coord e;
   for(i=0; i<500; i++){
@@ -18,7 +18,7 @@ elem_coord get_elem_dans_cube(float3* tab_coord,float tab_decors[1000][1000],flo
 
 
 }
-elem_coord elem_dans_cube(float3 coord,float tab_decors[1000][1000],float3 m1,float3 m2){
+elem_coord elem_dans_cube(float3 coord,float** tab_decors,float3 m1,float3 m2){
   //sizeof(float3)==24
   int i;
   elem_coord e;
@@ -35,7 +35,7 @@ elem_coord elem_dans_cube(float3 coord,float tab_decors[1000][1000],float3 m1,fl
 }    
 
 
-int cube_intersection_tab(float3* tab_coord,float tab_decors[1000][1000],float3 m1,float3 m2){
+int cube_intersection_tab(float3* tab_coord,float** tab_decors,float3 m1,float3 m2){
   /*******************************************************************
 
 TAILLE DE TABLEAUUUUUUUUUUUUUUUUU EN PARAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM
@@ -57,7 +57,7 @@ TAILLE DE TABLEAUUUUUUUUUUUUUUUUU EN PARAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM
 }
 
 
-karbre cons_arbre2(float3* tab_coord, float tab_decors[1000][1000],float3 m1, float3 m2, int n){
+karbre cons_arbre2(float3* tab_coord, float** tab_decors,float3 m1, float3 m2, int n){
   //0 vide, 1 plein, -1 init -2 noeud interne
   karbre ktmp=kArbreVide();
   int nb_elem_dans_cube=cube_intersection_tab(tab_coord,tab_decors,m1,m2);
@@ -135,7 +135,7 @@ karbre cons_arbre2(float3* tab_coord, float tab_decors[1000][1000],float3 m1, fl
 }
 
 
-karbre cons_arbre(float3* tab_coord,float tab_decors[1000][1000]){
+karbre cons_arbre(float3* tab_coord,float** tab_decors){
   // x y z > centre boule - rayon r
   /*
     for(int i=0; i<500; i++){

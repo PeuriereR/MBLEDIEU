@@ -1,6 +1,6 @@
-OPTIONS=-g -Wall -std=c99 
+OPTIONS=-Wall -g
 GLUT=-lglut -lGLU -lGL -lm
-
+CC = gcc
 all: proj
 
 proj: main.o karbre.o float3.o draw.o construction_karbre.o
