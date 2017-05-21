@@ -480,7 +480,7 @@ void affichage(){
 
 
   /* on pourra faire fonction generale avec le .z > type */
-  affiche_karbre4(karbre8,V_POS,V_DIR,V_UP);
+  affiche_karbre_clipping(karbre8,V_POS,V_DIR,V_UP);
   
   //dessin_arbre();
   dessin_lait();

@@ -40,6 +40,11 @@ float distance_point(float3 p1, float3 p2){
   return sqrt(pow(p2.x-p1.x,2)+pow(p2.y-p1.y,2)+pow(p2.z-p1.z,2));
 }
 
+float norme_vecteur(float3 v1){
+  return sqrt(pow(v1.x,2)+pow(v1.y,2)+pow(v1.z,2));
+}
+
+
 float produit_scalaire(float3 p1, float3 p2){
   return (p1.x * p2.x + p1.y * p2.y + p1.z * p2.z);
 }
