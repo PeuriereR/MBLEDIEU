@@ -3,10 +3,9 @@
 #include "draw.h"
 
 int dans_cube(float3 p,float3 m1,float3 m2);
-elem_coord get_elem_dans_cube(float3* tab_coord,float** tab_decors,float3 m1,float3 m2);
-karbre cons_arbre(float3* tab_coord,float** tab_decors);
-karbre cons_arbre2(float3* tab_coord,float** tab_decors, float3 m1, float3 m2, int n);
-int cube_intersection_tab(float3* tab_coord,float** tab_decors,float3 m1,float3 m2);
+karbre cons_arbre(float3* tab_coord,int taille_coord,float** tab_decors);
+karbre cons_arbre2(float3* tab_coord,int taille_coord,float** tab_decors, float3 m1, float3 m2, int n);
+int cube_intersection_tab(float3* tab_coord,int taille_coord,float** tab_decors,float3 m1,float3 m2);
 elem_coord elem_dans_cube(float3 coord,float** tab_decors,float3 m1,float3 m2);
 void affiche_karbre_simple2(karbre k,float3 m1, float3 m2);
 void affiche_karbre_simple(karbre k);

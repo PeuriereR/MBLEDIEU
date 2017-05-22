@@ -740,7 +740,7 @@ int main(int argc, char**argv){
   
   init_arbres();
 
-  karbre8=cons_arbre(tab_arbre,tab_decors);
+  karbre8=cons_arbre(tab_arbre,500,tab_decors);
   
   init_lait();
   
