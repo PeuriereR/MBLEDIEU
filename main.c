@@ -8,6 +8,8 @@
 #define VIT_MAX 2
 int pppp=1;
 
+int start=0;
+
 karbre karbre8;
 int r_1,r_2,r_3;
   int seuil;
@@ -53,6 +55,44 @@ float3 V_UP;
 float3 V_UP_INIT;
 float3 V_90_INIT;
 float3 tab_proj[50][3];
+
+void start_anim(){
+  if (wouah<=500){
+
+    glBegin(GL_QUADS);
+    glVertex3f(480-wouah,480-wouah,-100);
+    glVertex3f(480-wouah,520+wouah,-100);
+    glVertex3f(480-wouah,520+wouah,800);
+    glVertex3f(480-wouah,480-wouah,800);
+
+    glVertex3f(480-wouah,520+wouah,-100);
+    glVertex3f(520+wouah,520+wouah,-100);
+    glVertex3f(520+wouah,520+wouah,800);
+    glVertex3f(480-wouah,520+wouah,800);
+     
+    glVertex3f(480-wouah,480-wouah,-100);
+    glVertex3f(520+wouah,480-wouah,-100);
+    glVertex3f(520+wouah,480-wouah,800);
+    glVertex3f(480-wouah,480-wouah,800);
+     
+    glVertex3f(520+wouah,480-wouah,-100);
+    glVertex3f(520+wouah,520+wouah,-100);
+    glVertex3f(520+wouah,520+wouah,800);
+    glVertex3f(520+wouah,480-wouah,800);
+
+    glEnd();
+    if (start==1)
+      wouah+=5;
+  }
+  else{
+    //active collision
+    //active le jeu
+
+  }
+
+
+
+}
 
 int clamp_min_max(int n, int min, int max){
   if (n<min) return min;
@@ -488,32 +528,12 @@ void affichage(){
 
   glColor4f(1,1,0,0.7);
 
-  glBegin(GL_QUADS);
-     glVertex3f(480-wouah,480-wouah,-100);
-     glVertex3f(480-wouah,520+wouah,-100);
-     glVertex3f(480-wouah,520+wouah,800);
-     glVertex3f(480-wouah,480-wouah,800);
+  
+  if(V_POS.x>480 && V_POS.x<520
+     && V_POS.y>480 && V_POS.y<520 && start==0)
+    start=1;
+  start_anim();
 
-     glVertex3f(480-wouah,520+wouah,-100);
-     glVertex3f(520+wouah,520+wouah,-100);
-     glVertex3f(520+wouah,520+wouah,800);
-     glVertex3f(480-wouah,520+wouah,800);
-     
-     glVertex3f(480-wouah,480-wouah,-100);
-     glVertex3f(520+wouah,480-wouah,-100);
-     glVertex3f(520+wouah,480-wouah,800);
-     glVertex3f(480-wouah,480-wouah,800);
-     
-     glVertex3f(520+wouah,480-wouah,-100);
-     glVertex3f(520+wouah,520+wouah,-100);
-     glVertex3f(520+wouah,520+wouah,800);
-     glVertex3f(520+wouah,480-wouah,800);
-
-     glEnd();
-
-     if(V_POS.x>480 && V_POS.x<520
-	&& V_POS.y>480 && V_POS.y<520)
-       wouah+=3;
   
   glEnd();
   
