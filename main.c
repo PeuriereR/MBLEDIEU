@@ -3,8 +3,8 @@
 #include "draw.h"
 #include "construction_karbre.h"
 
-#define LARGEUR_MAP 500 // X <==> i 
-#define LONGUEUR_MAP 1000 // Y <==> j
+#define LARGEUR_MAP 750 // X <==> i 
+#define LONGUEUR_MAP 750 // Y <==> j
 
 #define VIT_MAX 20
 int pppp=1;
@@ -45,6 +45,8 @@ int key_haut,key_bas,key_droite,key_gauche;
 float3 V_POS;
 /* S_VIT : vitesse du joueur */
 float S_VIT;
+
+float vie;
 float3 p2;
 float3 p1_hyperC,p2_hyperC;
 float3 p1_hyperC2,p2_hyperC2;
@@ -55,6 +57,7 @@ float3 V_UP;
 float3 V_UP_INIT;
 float3 V_90_INIT;
 float3 tab_proj[50][3];
+float3 V_EYE;
 
 void start_anim(){
   if (wouah<=500){
@@ -101,11 +104,6 @@ int clamp_min_max(int n, int min, int max){
 }
 
 
-float clamp_min_max_f(float n, float min, float max){
-  if (n<min) return min;
-  if (n>=max) return max;
-  return n;
-}
 int clamp(int n){
   return clamp_min_max(n,0,997);
 }
@@ -377,6 +375,8 @@ void affichage_pt(float3 p1){
 
 void affichage(){
   int i;
+  int val = 0;
+
   /*
     angle_tangage=angle_tangage+0.2;
     if (abs(angle_tangage)>=360)
@@ -400,6 +400,8 @@ void affichage(){
   // float3 centre_cube=milieu_cube(p1,p2);
 
   glClearColor(0.1,0.1,0.2,0.2);
+
+  
   glMatrixMode(GL_MODELVIEW);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glLoadIdentity();
@@ -407,9 +409,14 @@ void affichage(){
   glFrustum(-10,10,-10,10,10,10000);
   //gluPerspective(100,1,0.1,1000);
 
-  gluLookAt(V_POS.x-30*V_DIR.x +  V_UP.x*8 +r_1,
-	    V_POS.y-30*V_DIR.y +  V_UP.y*8 +r_2,
-	    V_POS.z-30*V_DIR.z +  V_UP.z*8 +r_3,
+  
+  V_EYE.x=V_POS.x-30*V_DIR.x +  V_UP.x*8;
+  V_EYE.y=V_POS.y-30*V_DIR.y +  V_UP.y*8;
+  V_EYE.z=V_POS.z-30*V_DIR.z +  V_UP.z*8;
+  
+  gluLookAt(V_EYE.x,
+	    V_EYE.y,
+	    V_EYE.z,
 	    V_POS.x,
 	    V_POS.y,
 	    V_POS.z,
@@ -417,23 +424,6 @@ void affichage(){
 	    V_UP.y,
 	    V_UP.z
 	    );
-
-  /*
-  gluLookAt(centre_cube.x-30*V_DIR.x +  V_UP.x*8 +r_1,
-	    centre_cube.y-30*V_DIR.y +  V_UP.y*8 +r_2,
-	    centre_cube.z-30*V_DIR.z +  V_UP.z*8 +r_3,
-	    centre_cube.x,
-	    centre_cube.y,
-	    centre_cube.z,
-	    V_UP.x,
-	    V_UP.y,
-	    V_UP.z
-	    );
-
-  */
-  
-  //  gluLookAt(-70,-20,70,10,50,10,0,0,1);
-
 
   for( i=0; i<50; i++){
     /* Methode patarasse */
@@ -478,9 +468,7 @@ void affichage(){
   glVertex3f( V_DIR.x*100, V_DIR.y*100, V_DIR.z*100);
   */
 
-    
-  
-  int val = 0;
+
   
   /* Mise à jour du vecteur position */
 
@@ -496,6 +484,7 @@ void affichage(){
     if (V_POS.z <=tab_decors[(int)V_POS.x][(int)V_POS.y]) { // On est au niveau du sol ( ou en-dessous!)
       /* Traitement en cas de collision avec le sol :*/
       V_POS.z=tab_decors[(int)V_POS.x][(int)V_POS.y];
+      vie--;
     }
     else {
       /* Traitement du cas courant : vol sans turbulences */
@@ -506,9 +495,12 @@ void affichage(){
     }
   }
 
-  /* Dessin du 'vaisseau ' */
-    glBegin(GL_LINES);
+  /* Dessin du 'vaisseau ' après mise à jour du vecteur position pour effet vitesse accru */
 
+  
+  glBegin(GL_LINES);
+    
+  val=0;
   glColor4f(1,0,0,0.5);
   glVertex3f( V_POS.x-val,V_POS.y-val,V_POS.z-val);
   glVertex3f( V_POS.x+V_DIR.x*10-val,V_POS.y+V_DIR.y*10-val,V_POS.z+V_DIR.z*10-val);
@@ -516,11 +508,12 @@ void affichage(){
   glColor4f(0,1,0,0.5);
   glVertex3f(V_POS.x-V_90.x*5,V_POS.y-V_90.y*5,V_POS.z-V_90.z*5);
   glVertex3f(V_POS.x+V_90.x*5,V_POS.y+V_90.y*5,V_POS.z+V_90.z*5);
- 
+
   glColor4f(0,0,1,0.5);
   glVertex3f( V_POS.x-val,V_POS.y-val,V_POS.z-val);
   glVertex3f( V_POS.x+V_UP.x*10-val,V_POS.y+ V_UP.y*10-val,V_POS.z+ V_UP.z*10-val);
 
+  
   glColor4f(0,1,1,1);
 
   for(i=0; i<LARGEUR_MAP; i=i+10){
@@ -562,6 +555,14 @@ void affichage(){
   
   dessin_grille();
 
+
+
+  
+
+  /* Dessin jauge de vie - avant mise à jour du vecteur pos pour qu'elle soit statique à l'écran*/
+  if (start==1)
+  dessin_jauge(5,5,130,50,vie,ROUGE,GRIS,BLEU);
+  
   glutSwapBuffers();
 
 }
@@ -697,6 +698,7 @@ int main(int argc, char**argv){
   cote_projectile=-5;
   taille_projectile=1;
   r_1=r_2=r_3=0;
+  vie=100;
   srand((unsigned) time(&t));
 
   if ( (tab_decors = malloc (sizeof(float *) * LARGEUR_MAP )) == NULL ) {
@@ -716,7 +718,6 @@ int main(int argc, char**argv){
       tab_decors[i][j]=0;
     }
   }
-
 
   r_sphere_joueur=5;
   float3 init= init_float3(-5000,-5000,-5000);
