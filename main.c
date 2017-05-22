@@ -3,13 +3,13 @@
 #include "draw.h"
 #include "construction_karbre.h"
 
-#define LONGUEUR_MAP 1005
-#define LARGEUR_MAP 1005
-#define VIT_MAX 2
+#define LARGEUR_MAP 500 // X <==> i 
+#define LONGUEUR_MAP 1000 // Y <==> j
+
+#define VIT_MAX 20
 int pppp=1;
 
 int start=0;
-
 karbre karbre8;
 int r_1,r_2,r_3;
   int seuil;
@@ -99,6 +99,13 @@ int clamp_min_max(int n, int min, int max){
   if (n>=max) return max;
   return n;
 }
+
+
+float clamp_min_max_f(float n, float min, float max){
+  if (n<min) return min;
+  if (n>=max) return max;
+  return n;
+}
 int clamp(int n){
   return clamp_min_max(n,0,997);
 }
@@ -113,8 +120,8 @@ void aplanir(){
   int i,j;
   // indices relatifs aux cases adjacentes à la case actuelle (gauche,milieu,droite || haut,centre,bas)
   int g,d,h,b,c,m;
-  int max_i=LONGUEUR_MAP;
-  int max_j=LARGEUR_MAP;
+  int max_i=LARGEUR_MAP;
+  int max_j=LONGUEUR_MAP;
   for ( i = 0 ; i < max_i ; i++){
     for ( j = 0 ; j < max_j ; j++){
       //printf("jii\n");
@@ -153,25 +160,25 @@ void init_arbres(){
   
   int i,j;
   for(i=0; i<200; i++){
-    tab_arbre[i].x=rand()%990+1;
-    tab_arbre[i].y=rand()%990+1;
+    tab_arbre[i].x=rand()%(LARGEUR_MAP-10)+5;
+    tab_arbre[i].y=rand()%(LONGUEUR_MAP-10)+5;;
     tab_arbre[i].z=1; /* TYPE = ARBRE, on utilise tab_decors pour la hauteur*/
 
   }
   int indice=200;
   for(i=0; i<29; i++){// 10*15
-    int randx=rand()%990+1;
-    int randy=rand()%990+1;
+    int randx=rand()%(LARGEUR_MAP-10)+5;
+    int randy=rand()%(LONGUEUR_MAP-10)+5;
     tab_arbre[indice].x=randx;
     tab_arbre[indice].y=randy;
     indice++;
     for(j=0;j<9;j++){
       int signe=rand()%2-1;
       if (signe==0) signe=1;
-      tab_arbre[indice].x=clamp_min_max(randx+signe*rand()%30,10,990);
+      tab_arbre[indice].x=clamp_min_max(randx+signe*rand()%30,10,LARGEUR_MAP-10);
       signe=rand()%2-1;
       if (signe==0) signe=1;
-      tab_arbre[indice].y=clamp_min_max(randy+signe*rand()%30,10,990);
+      tab_arbre[indice].y=clamp_min_max(randy+signe*rand()%30,10,LONGUEUR_MAP-10);
          indice++;
     }
     
@@ -182,10 +189,12 @@ void init_arbres(){
 
 
 void init_lait(){
+  int centreX = LARGEUR_MAP / 4;
+  int centreY = LONGUEUR_MAP / 4;
   int i;
   for(i=0; i<200; i++){
-    tab_lait[i][0]=rand()%700+100;
-    tab_lait[i][1]=rand()%700+100;
+    tab_lait[i][0]=rand()%(LARGEUR_MAP-centreX)+centreX/2;
+    tab_lait[i][1]=rand()%(LONGUEUR_MAP-centreY)+centreY/2;
   }
 }
 
@@ -213,10 +222,8 @@ void dessin_arbre(){
 
 
 void dessin_grille(){
-  int borneInf = -99;
-  int borneSup = 99;
-
-  int bS=997;
+  int bS_Larg=LARGEUR_MAP;
+  int bS_Long=LONGUEUR_MAP;
   float c;
   int pas = 2;
   int p;
@@ -230,27 +237,32 @@ void dessin_grille(){
   p=rand()%100;
   if ( p < 85)
   nuages +=3;
-  if (nuages>997) nuages=0;
+  if (nuages>bS_Long) nuages=0;
 
   if (!nuages_toggle)
     nuages=0;
   
-  for ( j = 0; j < bS; j+=pas ){
+  for ( j = 0; j < bS_Long-pas; j+=pas ){
 
     glBegin(GL_TRIANGLE_STRIP);
-    for ( i = 0; i < bS; i+=pas ){
+    for ( i = 0; i < bS_Larg-pas; i+=pas ){
 
       // changement couleurs( nuages )
-      c = mapFloat(tab_decors[(i+nuages)%997][(j+nuages)%997],0,200,0,1);
+
+      //printf("(i+nuages)%(LARGEUR_MAP-1): %d  \n",(i+nuages)%(LARGEUR_MAP-1));
+      // printf("(j+nuages)%(LONGUEUR_MAP-1) : %d\n",(j+nuages)%(LONGUEUR_MAP-1));
+      
+      c = mapFloat(tab_decors[(i+nuages)%(LARGEUR_MAP-1)][(j+nuages)%(LONGUEUR_MAP-1)],0,200,0,1);
       glColor3f(c,c,c);
       // glColor3f(.5,.5,.5);
-      
+
+
       glVertex3f(i, j, tab_decors[i][j]);
       glVertex3f(i, j+pas, tab_decors[i][j+pas]);
       glVertex3f(i+pas, j, tab_decors[i+pas][j]);
 
       // changement couleurs (nuages )
-      c = mapFloat(tab_decors[(i+nuages)%997][(j+nuages)%997],0,200,0,1);
+      c = mapFloat(tab_decors[(i+nuages)%(LARGEUR_MAP-1)][(j+nuages)%(LONGUEUR_MAP-1)],0,200,0,1);
       glColor3f(c,c,c);
       //  glColor3f(.8,.8,.8);
       
@@ -301,8 +313,8 @@ void gestion_input(){
     V_POS.y-=V_DIR.y;
     */
     S_VIT--;
-    if (abs(S_VIT)>VIT_MAX)
-      S_VIT=-VIT_MAX;
+    if (S_VIT < 0 )
+      S_VIT = 0;
   }
   if (key_z == 1){
  
@@ -368,7 +380,7 @@ void affichage_pt(float3 p1){
 }
 
 void affichage(){
-  int i,j;
+  int i;
   /*
     angle_tangage=angle_tangage+0.2;
     if (abs(angle_tangage)>=360)
@@ -429,9 +441,10 @@ void affichage(){
 
   for( i=0; i<50; i++){
     /* Methode patarasse */
-    if(tab_proj[i][0].x!=-5000)
-      if (distance_point(tab_proj[i][1],V_POS)>1000)
+    if(tab_proj[i][0].x!=-5000){
+      if (distance_point(tab_proj[i][1],V_POS)>1000){
 	tab_proj[i][0].x=-5000;
+      }
       else{
 	tab_proj[i][1].x+=5*tab_proj[i][0].x;
 	tab_proj[i][1].y+=5*tab_proj[i][0].y;
@@ -444,6 +457,7 @@ void affichage(){
 	affiche_cube_plein(tab_proj[i][1],tab_proj[i][2],1);
 	tab_proj[i][0].z-=0.01;
       }
+    }
   }
   
   glBegin(GL_LINES);
@@ -480,7 +494,20 @@ void affichage(){
   */
 
 
-  V_POS = f3_add_f3(V_POS,f3_add_f3(V_DIR,mul_float3(V_DIR,S_VIT)));
+  /* Prise en compte de la gravité : si le nez pointe vers le bas : acceleration sinon ralentissement */
+  float ps =produit_scalaire (V_UP_INIT,V_DIR);
+  //printf("ps: %f\n",ps);
+  /*  if (ps  > 0) S_VIT -= ps;
+    else
+  */
+  S_VIT-=ps;
+
+ S_VIT= clamp_min_max_f(S_VIT,0,VIT_MAX);
+ //  printf("la vit: %f\n",S_VIT);
+  /* Mise à jour du vecteur position */
+  V_POS = f3_add_f3(V_POS,f3_add_f3(V_DIR,mul_float3(V_DIR,S_VIT/10)));
+
+  
   //  V_POS.y = f3_add_f3(V_DIR,mul_float(V_DIR,S_VIT)).y;
   ///  V_POS.z = f3_add_f3(V_DIR,mul_float(V_DIR,S_VIT)).z;
 
@@ -503,6 +530,7 @@ void affichage(){
   glVertex3f( V_POS.x+V_UP.x*10-val,V_POS.y+ V_UP.y*10-val,V_POS.z+ V_UP.z*10-val);
 
   glColor4f(0,1,1,1);
+
   for(i=0; i<1000; i=i+10){
     glVertex3f(i,0,0);
     glVertex3f(i,0,300);
@@ -520,11 +548,13 @@ void affichage(){
 
 
   /* on pourra faire fonction generale avec le .z > type */
+
   affiche_karbre_clipping(karbre8,V_POS,V_DIR,V_UP);
   
   //dessin_arbre();
   dessin_lait();
 
+  
 
   glColor4f(1,1,0,0.7);
 
@@ -536,6 +566,7 @@ void affichage(){
 
   
   glEnd();
+
   
   if (auto_scroll_toggle)
     {
@@ -544,8 +575,10 @@ void affichage(){
       V_POS.z+=.5*V_DIR.z;
 
     }
+
   
   dessin_grille();
+
   glutSwapBuffers();
 
 }
@@ -662,14 +695,14 @@ void mountain(int i_e, int j_e, int largeur){
   
   for ( i = largeur ; i > 0 ;i-- )
     for ( j = largeur ; j > 0 ;j-- ){
-      if(tab_decors[clamp_min_max(i_e+i,0,1000)][clamp_min_max(j_e+j,0,1000)]+largeur<150)
-	tab_decors[clamp_min_max(i_e+i,0,1000)][clamp_min_max(j_e+j,0,1000)] +=largeur-((i+j)/2);
-      if(tab_decors[clamp_min_max(i_e+i,0,1000)][clamp_min_max(j_e-j,0,1000)]+largeur<150)
-	tab_decors[clamp_min_max(i_e+i,0,1000)][clamp_min_max(j_e-j,0,1000)] +=largeur-((i+j)/2);
-      if( tab_decors[clamp_min_max(i_e-i,0,1000)][clamp_min_max(j_e-j,0,1000)]+largeur<150)
-	tab_decors[clamp_min_max(i_e-i,0,1000)][clamp_min_max(j_e-j,0,1000)] +=largeur-((i+j)/2);
-      if( tab_decors[clamp_min_max(i_e-i,0,1000)][clamp_min_max(j_e+j,0,1000)]+largeur<150)
-	tab_decors[clamp_min_max(i_e-i,0,1000)][clamp_min_max(j_e+j,0,1000)] +=largeur-((i+j)/2);
+      if(tab_decors[clamp_min_max(i_e+i,0,LARGEUR_MAP-1)][clamp_min_max(j_e+j,0,LONGUEUR_MAP-1)]+largeur<150)
+	tab_decors[clamp_min_max(i_e+i,0,LARGEUR_MAP-1)][clamp_min_max(j_e+j,0,LONGUEUR_MAP-1)] +=largeur-((i+j)/2);
+      if(tab_decors[clamp_min_max(i_e+i,0,LARGEUR_MAP-1)][clamp_min_max(j_e-j,0,LONGUEUR_MAP-1)]+largeur<150)
+	tab_decors[clamp_min_max(i_e+i,0,LARGEUR_MAP-1)][clamp_min_max(j_e-j,0,LONGUEUR_MAP-1)] +=largeur-((i+j)/2);
+      if( tab_decors[clamp_min_max(i_e-i,0,LARGEUR_MAP-1)][clamp_min_max(j_e-j,0,LONGUEUR_MAP-1)]+largeur<150)
+	tab_decors[clamp_min_max(i_e-i,0,LARGEUR_MAP-1)][clamp_min_max(j_e-j,0,LONGUEUR_MAP-1)] +=largeur-((i+j)/2);
+      if( tab_decors[clamp_min_max(i_e-i,0,LARGEUR_MAP-1)][clamp_min_max(j_e+j,0,LONGUEUR_MAP-1)]+largeur<150)
+	tab_decors[clamp_min_max(i_e-i,0,LARGEUR_MAP-1)][clamp_min_max(j_e+j,0,LONGUEUR_MAP-1)] +=largeur-((i+j)/2);
     }
 }
   
@@ -677,7 +710,7 @@ void mountain(int i_e, int j_e, int largeur){
 int main(int argc, char**argv){
   //INITIALISATION
   time_t t;
-  int i,j,y;
+  int i,j;
   cote_projectile=-5;
   taille_projectile=1;
   r_1=r_2=r_3=0;
@@ -728,7 +761,7 @@ int main(int argc, char**argv){
   V_UP = init_float3(0,0,1);
 
   // V_90_INIT = V_90;
-  //V_UP_INIT = V_UP;
+ V_UP_INIT = V_UP;
   
   // Initialisation décors
   
@@ -738,22 +771,24 @@ int main(int argc, char**argv){
   fprintf(stderr,"VEC: %f %f %f \n",V_DIR.x,V_DIR.y,V_DIR.z);
     
  
-  for ( i = 0 ; i < 1000 ; i++){
-    for ( j = 0 ; j < 1000 ; j++){
+  for ( i = 0 ; i < LARGEUR_MAP ; i++){
+    for ( j = 0 ; j < LONGUEUR_MAP ; j++){
       rand_seed=rand()%30+1;
 
       tab_decors[i][j]=mapFloat((rand()/rand_seed)%5,0,5,-10,20);
     }
   }
+
+  /*
   
   fprintf(stderr,"TEEEEEEEEEEEEEEEST\n");
   for ( i = 0 ; i < 1000 ;i++ )
     tab_decors[i][150] = -50;
-  
+  */
   fprintf(stderr,"TEEEEEEEEEEEEEEEST2\n");
   
   for ( i =0 ; i<50 ; i++)
-  mountain(rand()%1000,rand()%1000,rand()%150+30);
+  mountain(rand()%LARGEUR_MAP,rand()%LONGUEUR_MAP,rand()%150+30);
   
   for (  i = 0 ; i < 28; i++)   aplanir();
 
@@ -795,6 +830,7 @@ int main(int argc, char**argv){
   glutSpecialUpFunc(specialInputUp);
   
   //gestionnaire GLUT
+
 
   glutMainLoop();
   return EXIT_SUCCESS;

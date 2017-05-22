@@ -9,6 +9,7 @@ int dans_cube(float3 p,float3 m1,float3 m2){
   return 0;
 }
 
+
 int cube_intersection_tab(float3* tab_coord,int taille_coord,float** tab_decors,float3 m1,float3 m2){
   /*******************************************************************
 
@@ -131,6 +132,7 @@ karbre cons_arbre(float3* tab_coord,int taille_coord,float** tab_decors){
     printf("tab %f\n",tab_coord[i].x);
 
     }*/
+  printf("N : %d\n",N);
   int n=N;
   float3 m1,m2;
   m1=init_float3(0,0,0);
@@ -198,8 +200,8 @@ void affiche_karbre_simple(karbre k){
     return;
   }
     
-  float3 m1=init_float3(0,0,0);
-  float3 m2=init_float3(pow(2,N),pow(2,N),pow(2,N));
+  //float3 m1=init_float3(0,0,0);
+  // float3 m2=init_float3(pow(2,N),pow(2,N),pow(2,N));
   //affiche_karbre_simple2(k, m1, m2);
 }
 
