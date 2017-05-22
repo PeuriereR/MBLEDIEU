@@ -18,6 +18,7 @@ typedef int element;
 typedef struct{
   float3 coord;
   int type;
+  float scale;
 }elem_coord;
 typedef struct noeud {
   int vide;

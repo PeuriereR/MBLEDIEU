@@ -42,7 +42,7 @@ TAILLE DE TABLEAUUUUUUUUUUUUUUUUU EN PARAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM
 }
 
 
-karbre cons_arbre2(float3* tab_coord,int taille_coord,float** tab_decors,float3 m1, float3 m2, int n){
+karbre cons_arbre2(float3* tab_coord,float* tab_scale,int taille_coord,float** tab_decors,float3 m1, float3 m2, int n){
   //0 vide, 1 plein, -1 init -2 noeud interne
   karbre ktmp=kArbreVide();
   int nb_elem_dans_cube=cube_intersection_tab(tab_coord,taille_coord,tab_decors,m1,m2);
@@ -58,7 +58,7 @@ karbre cons_arbre2(float3* tab_coord,int taille_coord,float** tab_decors,float3 
     ktmp->elem.coord.y=tab_coord[nb_elem_dans_cube].y;
     ktmp->elem.coord.z=tab_decors[(int)tab_coord[nb_elem_dans_cube].x][(int)tab_coord[nb_elem_dans_cube].y];
     ktmp->elem.type=tab_coord[nb_elem_dans_cube].z;
-
+    ktmp->elem.scale=tab_scale[nb_elem_dans_cube];
     //=get_elem_dans_cube(tab_coord,tab_decors,m1,m2);
     // NOUVELLE FONCTION elem_dans_cube(tab_coord,tab_decors,m1,m2);
     // METTRE ELEMENT ICI
@@ -113,19 +113,19 @@ karbre cons_arbre2(float3* tab_coord,int taille_coord,float** tab_decors,float3 
   float3 m2_5; m2_5.x=(m1.x+(m2.x-m1.x)/2); m2_5.y=(m1.y+(m2.y-m1.y)/2); m2_5.z=m2.z;
   
   return kConsArbre(-2,
-		    cons_arbre2(tab_coord,taille_coord,tab_decors,m1,m2_1,n-1),
-		    cons_arbre2(tab_coord,taille_coord,tab_decors,m1_2,m2_2,n-1),
-		    cons_arbre2(tab_coord,taille_coord,tab_decors,m1_3,m2_3,n-1),
-		    cons_arbre2(tab_coord,taille_coord,tab_decors,m1_4,m2_4,n-1),
-		    cons_arbre2(tab_coord,taille_coord,tab_decors,m1_8,m2_8,n-1),
-		    cons_arbre2(tab_coord,taille_coord,tab_decors,m1_7,m2,n-1),
-		    cons_arbre2(tab_coord,taille_coord,tab_decors,m1_6,m2_6,n-1),
-		    cons_arbre2(tab_coord,taille_coord,tab_decors,m1_5,m2_5,n-1)
+		    cons_arbre2(tab_coord,tab_scale,taille_coord,tab_decors,m1,m2_1,n-1),
+		    cons_arbre2(tab_coord,tab_scale,taille_coord,tab_decors,m1_2,m2_2,n-1),
+		    cons_arbre2(tab_coord,tab_scale,taille_coord,tab_decors,m1_3,m2_3,n-1),
+		    cons_arbre2(tab_coord,tab_scale,taille_coord,tab_decors,m1_4,m2_4,n-1),
+		    cons_arbre2(tab_coord,tab_scale,taille_coord,tab_decors,m1_8,m2_8,n-1),
+		    cons_arbre2(tab_coord,tab_scale,taille_coord,tab_decors,m1_7,m2,n-1),
+		    cons_arbre2(tab_coord,tab_scale,taille_coord,tab_decors,m1_6,m2_6,n-1),
+		    cons_arbre2(tab_coord,tab_scale,taille_coord,tab_decors,m1_5,m2_5,n-1)
 		    );
 }
 
 
-karbre cons_arbre(float3* tab_coord,int taille_coord,float** tab_decors){
+karbre cons_arbre(float3* tab_coord,float* tab_scale,int taille_coord,float** tab_decors){
   // x y z > centre boule - rayon r
   /*
     for(int i=0; i<500; i++){
@@ -138,7 +138,7 @@ karbre cons_arbre(float3* tab_coord,int taille_coord,float** tab_decors){
   m1=init_float3(0,0,0);
   m2=init_float3(pow(2,n),pow(2,n),pow(2,n));
   
-  return cons_arbre2(tab_coord,taille_coord,tab_decors, m1, m2, n);
+  return cons_arbre2(tab_coord,tab_scale,taille_coord,tab_decors, m1, m2, n);
 }
 
 
@@ -237,18 +237,20 @@ void affiche_karbre_clipping2(karbre k,float3 m1, float3 m2, float3 vdir, float3
     ****************************************************/
     
     if (/* clipping sur l'angle */
-	angle<34
+	angle<40
 	/* clipping sur la distance */
 	&& produit_scalaire(vdir,v_cube)<800
 	/* clipping derriere */
 	&& produit_scalaire(vdir,v_cube)>=0
 	){
       /* on peut verifier k->elem.type si on n'a pas que des arbres */
-      glPushMatrix();
-      glTranslatef(k->elem.coord.x,k->elem.coord.y,k->elem.coord.z);
-      glScalef(1,1,1);
-      dessin_arbre2();
-      glPopMatrix();
+      if(k->elem.type==1){
+	glPushMatrix();
+	glTranslatef(k->elem.coord.x,k->elem.coord.y,k->elem.coord.z);
+	glScalef(1+k->elem.scale,1+k->elem.scale,1+k->elem.scale);
+	dessin_arbre2();
+	glPopMatrix();
+      }
     }
   }
   if(k->vide==-2){
