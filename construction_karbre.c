@@ -28,7 +28,6 @@ elem_coord get_elem_dans_cube(float3* tab_coord,float** tab_decors,float3 m1,flo
 }
 elem_coord elem_dans_cube(float3 coord,float** tab_decors,float3 m1,float3 m2){
   //sizeof(float3)==24
-  int i;
   elem_coord e;
   e.type=-1;
   if (coord.x > m1.x && coord.x < m2.x
@@ -150,6 +149,7 @@ karbre cons_arbre(float3* tab_coord,float** tab_decors){
     printf("tab %f\n",tab_coord[i].x);
 
     }*/
+  printf("N : %d\n",N);
   int n=N;
   float3 m1,m2;
   m1=init_float3(0,0,0);
@@ -217,8 +217,8 @@ void affiche_karbre_simple(karbre k){
     return;
   }
     
-  float3 m1=init_float3(0,0,0);
-  float3 m2=init_float3(pow(2,N),pow(2,N),pow(2,N));
+  //float3 m1=init_float3(0,0,0);
+  // float3 m2=init_float3(pow(2,N),pow(2,N),pow(2,N));
   //affiche_karbre_simple2(k, m1, m2);
 }
 
