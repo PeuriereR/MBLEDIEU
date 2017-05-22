@@ -4,7 +4,7 @@
 #include "construction_karbre.h"
 
 #define LARGEUR_MAP 500 // X <==> i 
-#define LONGUEUR_MAP 500 // Y <==> j
+#define LONGUEUR_MAP 1000 // Y <==> j
 
 #define VIT_MAX 20
 int pppp=1;
@@ -82,8 +82,8 @@ void aplanir(){
   int i,j;
   // indices relatifs aux cases adjacentes à la case actuelle (gauche,milieu,droite || haut,centre,bas)
   int g,d,h,b,c,m;
-  int max_i=LONGUEUR_MAP;
-  int max_j=LARGEUR_MAP;
+  int max_i=LARGEUR_MAP;
+  int max_j=LONGUEUR_MAP;
   for ( i = 0 ; i < max_i ; i++){
     for ( j = 0 ; j < max_j ; j++){
       //printf("jii\n");
