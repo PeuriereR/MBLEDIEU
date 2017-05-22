@@ -269,11 +269,17 @@ void dessin_arbre2(){
 
 
 
-  
   glVertex3f(1,1,-3);
   glVertex3f(-1,1,-3);
   glVertex3f(-1,-1,-3);
   glVertex3f(1,-1,3);
+
+  
+  glColor3f(.2,.25,.2);
+  glVertex3f(4,4,3);
+  glVertex3f(-4,4,3);
+  glVertex3f(-4,-4,3);
+  glVertex3f(4,-4,3);
   glEnd();
   
   /*DESSUS */
