@@ -208,7 +208,6 @@ void affiche_karbre_simple(karbre k){
 
 
 void affiche_karbre_clipping2(karbre k,float3 m1, float3 m2, float3 vdir, float3 point_clipping, float3 pt_actuel){
-  affiche_cube(m1,m2);
   //0 vide, 1 plein, -1 init -2 noeud interne
   if(k->vide==1){
     float3 v_cube=init_float3(k->elem.coord.x-point_clipping.x,k->elem.coord.y-point_clipping.y,k->elem.coord.z-point_clipping.z);

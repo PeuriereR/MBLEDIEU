@@ -7,9 +7,16 @@
 #define LONGUEUR_MAP 1000 // Y <==> j
 
 #define VIT_MAX 20
-int pppp=1;
+int barre_mur=1;
 
+/* Variables start truc jaune */
+int start_ajout_x;
+int start_ajout_y;
 int start=0;
+
+float3 tab_ennemi[50];
+
+
 karbre karbre8;
 int r_1,r_2,r_3;
   int seuil;
@@ -27,7 +34,6 @@ int rand_seed;
 int nuages_toggle=1;
 int auto_scroll_toggle=1;
 int arbre=1;
-int wouah=0;
 
 int cote_projectile;
 int taille_projectile;
@@ -57,39 +63,60 @@ float3 V_90_INIT;
 float3 tab_proj[50][3];
 
 void start_anim(){
-  if (wouah<=500){
+  if (start_ajout_x<=LARGEUR_MAP/2){
 
     glBegin(GL_QUADS);
-    glVertex3f(480-wouah,480-wouah,-100);
-    glVertex3f(480-wouah,520+wouah,-100);
-    glVertex3f(480-wouah,520+wouah,800);
-    glVertex3f(480-wouah,480-wouah,800);
+    glVertex3f(LARGEUR_MAP/2-20-start_ajout_x,LONGUEUR_MAP/2-20-start_ajout_y,-100);
+    glVertex3f(LARGEUR_MAP/2-20-start_ajout_x,LONGUEUR_MAP/2+20+start_ajout_y,-100);
+    glVertex3f(LARGEUR_MAP/2-20-start_ajout_x,LONGUEUR_MAP/2+20+start_ajout_y,800);
+    glVertex3f(LARGEUR_MAP/2-20-start_ajout_x,LONGUEUR_MAP/2-20-start_ajout_y,800);
 
-    glVertex3f(480-wouah,520+wouah,-100);
-    glVertex3f(520+wouah,520+wouah,-100);
-    glVertex3f(520+wouah,520+wouah,800);
-    glVertex3f(480-wouah,520+wouah,800);
+    glVertex3f(LARGEUR_MAP/2-20-start_ajout_x,LONGUEUR_MAP/2+20+start_ajout_y,-100);
+    glVertex3f(LARGEUR_MAP/2+20+start_ajout_x,LONGUEUR_MAP/2+20+start_ajout_y,-100);
+    glVertex3f(LARGEUR_MAP/2+20+start_ajout_x,LONGUEUR_MAP/2+20+start_ajout_y,800);
+    glVertex3f(LARGEUR_MAP/2-20-start_ajout_x,LONGUEUR_MAP/2+20+start_ajout_y,800);
      
-    glVertex3f(480-wouah,480-wouah,-100);
-    glVertex3f(520+wouah,480-wouah,-100);
-    glVertex3f(520+wouah,480-wouah,800);
-    glVertex3f(480-wouah,480-wouah,800);
+    glVertex3f(LARGEUR_MAP/2-20-start_ajout_x,LONGUEUR_MAP/2-20-start_ajout_y,-100);
+    glVertex3f(LARGEUR_MAP/2+20+start_ajout_x,LONGUEUR_MAP/2-20-start_ajout_y,-100);
+    glVertex3f(LARGEUR_MAP/2+20+start_ajout_x,LONGUEUR_MAP/2-20-start_ajout_y,800);
+    glVertex3f(LARGEUR_MAP/2-20-start_ajout_x,LONGUEUR_MAP/2-20-start_ajout_y,800);
      
-    glVertex3f(520+wouah,480-wouah,-100);
-    glVertex3f(520+wouah,520+wouah,-100);
-    glVertex3f(520+wouah,520+wouah,800);
-    glVertex3f(520+wouah,480-wouah,800);
+    glVertex3f(LARGEUR_MAP/2+20+start_ajout_x,LONGUEUR_MAP/2-20-start_ajout_y,-100);
+    glVertex3f(LARGEUR_MAP/2+20+start_ajout_x,LONGUEUR_MAP/2+20+start_ajout_y,-100);
+    glVertex3f(LARGEUR_MAP/2+20+start_ajout_x,LONGUEUR_MAP/2+20+start_ajout_y,800);
+    glVertex3f(LARGEUR_MAP/2+20+start_ajout_x,LONGUEUR_MAP/2-20-start_ajout_y,800);
 
     glEnd();
-    if (start==1)
-      wouah+=5;
+    if (start==1){
+      start_ajout_x+=((float)LARGEUR_MAP/(float)LONGUEUR_MAP)*5;
+    start_ajout_y+=((float)LONGUEUR_MAP/(float)LARGEUR_MAP)*5;
+    }
   }
   else{
+    start=2;
     //active collision
     //active le jeu
 
   }
+}
 
+
+void mur_ennemi(){
+  int i;
+  glBegin(GL_LINES);
+  if (start==2){
+    glColor4f(0,1,1,1);
+    for(i=0; i<LARGEUR_MAP; i=i+10){
+      glVertex3f(i,0,0);
+      glVertex3f(i,0,300);
+    }
+    glVertex3f(0,0,barre_mur);
+    glVertex3f(LARGEUR_MAP,0,barre_mur);
+    barre_mur++;
+    barre_mur= barre_mur%300;
+
+  glEnd();
+  }
 
 
 }
@@ -160,8 +187,8 @@ void init_arbres(){
   
   int i,j;
   for(i=0; i<200; i++){
-    tab_arbre[i].x=rand()%(LARGEUR_MAP-10)+5;
-    tab_arbre[i].y=rand()%(LONGUEUR_MAP-10)+5;;
+    tab_arbre[i].x=rand()%(LARGEUR_MAP-20)+10;
+    tab_arbre[i].y=rand()%(LONGUEUR_MAP-20)+10;
     tab_arbre[i].z=1; /* TYPE = ARBRE, on utilise tab_decors pour la hauteur*/
 
   }
@@ -302,7 +329,20 @@ void projectile(float3 direction, float3 f){
   }
 }
 
-  
+
+void ennemis(float3 centre){
+  int i;
+  for( i=0;i<50;i++){
+    
+    if (tab_ennemi[i].y==-1){
+      fprintf(stderr,"JE CREE UN PIGEON\n");
+      tab_ennemi[i].x=centre.x;
+      tab_ennemi[i].y=centre.y;
+      tab_ennemi[i].z=centre.z;
+      return;
+    }
+  }
+}  
 
 
 void gestion_input(){
@@ -459,6 +499,22 @@ void affichage(){
       }
     }
   }
+
+  
+  for( i=0; i<50; i++){
+    /* Methode patarasse */
+    if(tab_ennemi[i].y!=-1){
+      if (tab_ennemi[i].y>=LONGUEUR_MAP){
+	tab_ennemi[i].y=-1;
+      }
+      else{
+	tab_ennemi[i].y+=1;
+	fprintf(stderr,"VOLE MON PIGEON, VOLE\n");
+
+	  affiche_cube_plein(init_float3(tab_ennemi[i].x-10,tab_ennemi[i].y-10,tab_ennemi[i].z-10),init_float3(tab_ennemi[i].x+10,tab_ennemi[i].y+10,tab_ennemi[i].z+10),1);
+      }
+    }
+  }
   
   glBegin(GL_LINES);
   
@@ -529,22 +585,10 @@ void affichage(){
   glVertex3f( V_POS.x-val,V_POS.y-val,V_POS.z-val);
   glVertex3f( V_POS.x+V_UP.x*10-val,V_POS.y+ V_UP.y*10-val,V_POS.z+ V_UP.z*10-val);
 
-  glColor4f(0,1,1,1);
-
-  for(i=0; i<1000; i=i+10){
-    glVertex3f(i,0,0);
-    glVertex3f(i,0,300);
-  }
-
-  
-  glVertex3f(0,0,pppp);
-  glVertex3f(1000,0,pppp);
-      
-
-  pppp++;
-  pppp= pppp%300;
-
   glEnd();
+
+
+  mur_ennemi();
 
 
   /* on pourra faire fonction generale avec le .z > type */
@@ -559,8 +603,8 @@ void affichage(){
   glColor4f(1,1,0,0.7);
 
   
-  if(V_POS.x>480 && V_POS.x<520
-     && V_POS.y>480 && V_POS.y<520 && start==0)
+  if(V_POS.x>LARGEUR_MAP/2-20 && V_POS.x<LARGEUR_MAP/2+20
+     && V_POS.y>LONGUEUR_MAP/2-20 && V_POS.y<LONGUEUR_MAP/2+20 && start==0)
     start=1;
   start_anim();
 
@@ -611,7 +655,7 @@ void keyUp (unsigned char key, int x, int y) {
   }
 }
 void keyPressed (unsigned char key, int x, int y) {
-  printf("key : %d\n",key);
+  //printf("key : %d\n",key);
   if (key == 'q') {
     key_q=1;
   }
@@ -798,7 +842,11 @@ int main(int argc, char**argv){
   karbre8=cons_arbre(tab_arbre,500,tab_decors);
   
   init_lait();
-  
+
+  for (i=0; i<50; i++){
+    tab_ennemi[i]=init_float3(0,-1,0);
+  }
+  ennemis(init_float3(50,0,400));
   /*
 
     fprintf(stderr,"VECT: %f %f %f \n",V_UP.x,V_UP.y,V_UP.z);
