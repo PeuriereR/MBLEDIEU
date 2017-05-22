@@ -3,8 +3,9 @@
 #include "draw.h"
 #include "construction_karbre.h"
 
-#define LONGUEUR_MAP 1005
-#define LARGEUR_MAP 1005
+#define LARGEUR_MAP 500 // X <==> i 
+#define LONGUEUR_MAP 500 // Y <==> j
+
 #define VIT_MAX 20
 int pppp=1;
 
@@ -121,25 +122,25 @@ void init_arbres(){
   
   int i,j;
   for(i=0; i<200; i++){
-    tab_arbre[i].x=rand()%990+1;
-    tab_arbre[i].y=rand()%990+1;
+    tab_arbre[i].x=rand()%(LARGEUR_MAP-10)+5;
+    tab_arbre[i].y=rand()%(LONGUEUR_MAP-10)+5;;
     tab_arbre[i].z=1; /* TYPE = ARBRE, on utilise tab_decors pour la hauteur*/
 
   }
   int indice=200;
   for(i=0; i<29; i++){// 10*15
-    int randx=rand()%990+1;
-    int randy=rand()%990+1;
+    int randx=rand()%(LARGEUR_MAP-10)+5;
+    int randy=rand()%(LONGUEUR_MAP-10)+5;
     tab_arbre[indice].x=randx;
     tab_arbre[indice].y=randy;
     indice++;
     for(j=0;j<9;j++){
       int signe=rand()%2-1;
       if (signe==0) signe=1;
-      tab_arbre[indice].x=clamp_min_max(randx+signe*rand()%30,10,990);
+      tab_arbre[indice].x=clamp_min_max(randx+signe*rand()%30,10,LARGEUR_MAP-10);
       signe=rand()%2-1;
       if (signe==0) signe=1;
-      tab_arbre[indice].y=clamp_min_max(randy+signe*rand()%30,10,990);
+      tab_arbre[indice].y=clamp_min_max(randy+signe*rand()%30,10,LONGUEUR_MAP-10);
          indice++;
     }
     
@@ -150,10 +151,12 @@ void init_arbres(){
 
 
 void init_lait(){
+  int centreX = LARGEUR_MAP / 4;
+  int centreY = LONGUEUR_MAP / 4;
   int i;
   for(i=0; i<200; i++){
-    tab_lait[i][0]=rand()%700+100;
-    tab_lait[i][1]=rand()%700+100;
+    tab_lait[i][0]=rand()%(LARGEUR_MAP-centreX)+centreX/2;
+    tab_lait[i][1]=rand()%(LONGUEUR_MAP-centreY)+centreY/2;
   }
 }
 
@@ -767,7 +770,7 @@ int main(int argc, char**argv){
   fprintf(stderr,"TEEEEEEEEEEEEEEEST2\n");
   
   for ( i =0 ; i<50 ; i++)
-  mountain(rand()%1000,rand()%1000,rand()%150+30);
+  mountain(rand()%LARGEUR_MAP,rand()%LONGUEUR_MAP,rand()%150+30);
   
   for (  i = 0 ; i < 28; i++)   aplanir();
 
