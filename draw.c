@@ -25,8 +25,8 @@ void dessin_jauge( float coord_x, float coord_y,float largeur, float hauteur, fl
   /* Dessin de la jauge*/  
   couleur(couleur_FG);
   glVertex2f(coord_x+width*hauteur,coord_y+width*hauteur); /*HAUTEUR VOLONTAIRE dans le Y pour avoir un trait de meme épaisseur */
-  glVertex2f(coord_x+largeur*valeur/100-width*hauteur,coord_y+width*hauteur); /* Idem*/
-  glVertex2f(coord_x+largeur*valeur/100-width*hauteur,coord_y+hauteur-width*hauteur);
+  glVertex2f(coord_x+clamp_min_max_f(largeur*valeur/100,width*hauteur,largeur-width*hauteur),coord_y+width*hauteur); /* Idem*/
+  glVertex2f(coord_x+clamp_min_max_f(largeur*valeur/100,width*hauteur,largeur-width*hauteur),coord_y+hauteur-width*hauteur);
   glVertex2f(coord_x+width*hauteur,coord_y+hauteur-width*hauteur);
  
 

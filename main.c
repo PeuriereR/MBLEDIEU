@@ -626,6 +626,7 @@ void affichage(){
 
   glColor4f(0,1,1,1);
 
+  /*
   for(i=0; i<LARGEUR_MAP; i=i+10){
     glVertex3f(i,0,0);
     glVertex3f(i,0,300);
@@ -638,7 +639,7 @@ void affichage(){
 
   pppp++;
   pppp= pppp%300;
-
+  */
   glEnd();
 
   mur_ennemi();
@@ -672,8 +673,8 @@ void affichage(){
   
 
   /* Dessin jauge de vie - avant mise à jour du vecteur pos pour qu'elle soit statique à l'écran*/
-  if (start==1)
-  dessin_jauge(5,5,130,50,vie,ROUGE,GRIS,BLEU);
+  if (start!=0)
+  dessin_jauge(5,5,130,50,vie,BLEU,GRIS,ROUGE);
   
   glutSwapBuffers();
 
