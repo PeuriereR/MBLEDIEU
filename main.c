@@ -347,25 +347,21 @@ void gestion_input(){
   }
   
   if (key_bas == 1){
-    key_haut=0;
     V_DIR=rodrigues(-0.8,V_DIR,V_90);
     V_UP=produit_vectoriel(V_DIR,V_90);
   }
   
   if (key_haut == 1){
-    key_bas = 0;
     V_DIR=rodrigues(0.8,V_DIR,V_90);
     V_UP=produit_vectoriel(V_DIR,V_90);
   }
   
   if (key_droite == 1) {
-    key_gauche=0;
     V_DIR=rodrigues(-0.8,V_DIR,V_UP);
     V_90=produit_vectoriel(V_UP,V_DIR);
   }
   
   if (key_gauche == 1) {
-    key_droite=0;
     V_DIR=rodrigues(0.8,V_DIR,V_UP);
     V_90=produit_vectoriel(V_UP,V_DIR);
   }
@@ -460,14 +456,13 @@ void affichage(){
     }
   }
   
-  glBegin(GL_LINES);
   
   /*
     glColor4f(0,1,1,0.5);
     glVertex3f( 0,0,0);
     glVertex3f( 100,0,0);*/
 
-  
+  /*
   glColor4f(1,0,0.5,0.5);
   
   glVertex3f( 0,0,0);
@@ -481,42 +476,39 @@ void affichage(){
   glColor4f(1,1,0,0.5);
   glVertex3f( 0,0,0);
   glVertex3f( V_DIR.x*100, V_DIR.y*100, V_DIR.z*100);
-
+  */
 
     
-  // printf("centre_cube.x : %f  ,centre_cube.y  %f  ,centre_cube.z  %f  \n",centre_cube.x,centre_cube.y,centre_cube.z);
-
+  
   int val = 0;
-  /*
-  V_POS.x = f3_add_f3(V_POS,mul_float3(V_DIR,S_VIT)).x;
-  V_POS.y = f3_add_f3(V_POS,mul_float3(V_DIR,S_VIT)).y;
-  V_POS.z = f3_add_f3(V_POS,mul_float3(V_DIR,S_VIT)).z;
-  */
-
-
-  /* Prise en compte de la gravité : si le nez pointe vers le bas : acceleration sinon ralentissement */
-  float ps =produit_scalaire (V_UP_INIT,V_DIR);
-  //printf("ps: %f\n",ps);
-  /*  if (ps  > 0) S_VIT -= ps;
-    else
-  */
-  S_VIT-=ps;
-
- S_VIT= clamp_min_max_f(S_VIT,0,VIT_MAX);
- //  printf("la vit: %f\n",S_VIT);
+  
   /* Mise à jour du vecteur position */
+
+ 
+  if (!auto_scroll_toggle)
+    {
   V_POS = f3_add_f3(V_POS,f3_add_f3(V_DIR,mul_float3(V_DIR,S_VIT/10)));
+    }
 
+  /* Gestion des collisions + gravité joueur */
   
-  //  V_POS.y = f3_add_f3(V_DIR,mul_float(V_DIR,S_VIT)).y;
-  ///  V_POS.z = f3_add_f3(V_DIR,mul_float(V_DIR,S_VIT)).z;
+  if (V_POS.x > 0 && V_POS.y > 0 && V_POS.y < LONGUEUR_MAP && V_POS.x < LARGEUR_MAP){ // On est bien à l'intérieur de la map
+    if (V_POS.z <=tab_decors[(int)V_POS.x][(int)V_POS.y]) { // On est au niveau du sol ( ou en-dessous!)
+      /* Traitement en cas de collision avec le sol :*/
+      V_POS.z=tab_decors[(int)V_POS.x][(int)V_POS.y];
+    }
+    else {
+      /* Traitement du cas courant : vol sans turbulences */
+      /* Prise en compte de la gravité : si le nez pointe vers le bas : acceleration sinon ralentissement */
+      float ps = produit_scalaire (V_UP_INIT,V_DIR);
+      S_VIT -= ps/2;
+      S_VIT = clamp_min_max_f(S_VIT,0,VIT_MAX);
+    }
+  }
 
-  //  V_POS.x = mul_float3(V_DIR,2).x;
+  /* Dessin du 'vaisseau ' */
+    glBegin(GL_LINES);
 
-  
-  //  V_POS=f3_add_f3(V_POS,mul_float3(V_DIR,S_VIT));
-
-  
   glColor4f(1,0,0,0.5);
   glVertex3f( V_POS.x-val,V_POS.y-val,V_POS.z-val);
   glVertex3f( V_POS.x+V_DIR.x*10-val,V_POS.y+V_DIR.y*10-val,V_POS.z+V_DIR.z*10-val);
@@ -531,14 +523,14 @@ void affichage(){
 
   glColor4f(0,1,1,1);
 
-  for(i=0; i<1000; i=i+10){
+  for(i=0; i<LARGEUR_MAP; i=i+10){
     glVertex3f(i,0,0);
     glVertex3f(i,0,300);
   }
 
   
   glVertex3f(0,0,pppp);
-  glVertex3f(1000,0,pppp);
+  glVertex3f(LARGEUR_MAP,0,pppp);
       
 
   pppp++;
@@ -566,15 +558,6 @@ void affichage(){
 
   
   glEnd();
-
-  
-  if (auto_scroll_toggle)
-    {
-      V_POS.x+=.5*V_DIR.x;
-      V_POS.y+=.5*V_DIR.y;
-      V_POS.z+=.5*V_DIR.z;
-
-    }
 
   
   dessin_grille();
@@ -611,7 +594,7 @@ void keyUp (unsigned char key, int x, int y) {
   }
 }
 void keyPressed (unsigned char key, int x, int y) {
-  printf("key : %d\n",key);
+  // printf("key : %d\n",key);
   if (key == 'q') {
     key_q=1;
   }
@@ -632,7 +615,7 @@ void keyPressed (unsigned char key, int x, int y) {
   }
   if (key == 32){
     projectile(V_DIR,V_POS);
-    fprintf(stderr,"VEC: %f %f %f \n",V_DIR.x+cote_projectile,V_DIR.y+cote_projectile,V_DIR.z+cote_projectile);
+    //   fprintf(stderr,"VEC: %f %f %f \n",V_DIR.x+cote_projectile,V_DIR.y+cote_projectile,V_DIR.z+cote_projectile);
   }
   if (key=='n'){
     if(nuages_toggle) nuages_toggle=0;
