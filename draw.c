@@ -1,5 +1,41 @@
 #include "draw.h"
 
+void dessin_jauge( float coord_x, float coord_y,float largeur, float hauteur, float valeur, int couleur_FG, int couleur_BG, int couleur_vide){
+
+  valeur=clamp_min_max_f(valeur,0,100);
+  float width=.05;
+  glDisable(GL_DEPTH_TEST);  
+  
+  glLoadIdentity ();
+  gluOrtho2D (0, 800, 0, 800);
+  
+  glBegin(GL_QUADS);
+  /* Dessin de l'arrière-plan*/
+  couleur(couleur_BG);
+  glVertex2f(coord_x,coord_y);
+  glVertex2f(coord_x+largeur,coord_y);
+  glVertex2f(coord_x+largeur,coord_y+hauteur);
+  glVertex2f(coord_x,coord_y+hauteur);
+  /* Dessin de la partie vide*/  
+  couleur(couleur_vide);
+  glVertex2f(coord_x+width*hauteur,coord_y+width*hauteur); /*HAUTEUR VOLONTAIRE dans le Y pour avoir un trait de meme épaisseur */
+  glVertex2f(coord_x+largeur-width*hauteur,coord_y+width*hauteur); /* Idem*/
+  glVertex2f(coord_x+largeur-width*hauteur,coord_y+hauteur-width*hauteur);
+  glVertex2f(coord_x+width*hauteur,coord_y+hauteur-width*hauteur);
+  /* Dessin de la jauge*/  
+  couleur(couleur_FG);
+  glVertex2f(coord_x+width*hauteur,coord_y+width*hauteur); /*HAUTEUR VOLONTAIRE dans le Y pour avoir un trait de meme épaisseur */
+  glVertex2f(coord_x+largeur*valeur/100-width*hauteur,coord_y+width*hauteur); /* Idem*/
+  glVertex2f(coord_x+largeur*valeur/100-width*hauteur,coord_y+hauteur-width*hauteur);
+  glVertex2f(coord_x+width*hauteur,coord_y+hauteur-width*hauteur);
+ 
+
+  glEnd();
+  
+    glEnable(GL_DEPTH_TEST);  /* bad trip simulator si on commente cette ligne !*/
+
+}
+
 void affiche_cube_plein(float3 p1, float3 p2, float opacity){
   
   glBegin(GL_QUADS);
@@ -323,4 +359,11 @@ void couleur(int c){
     glColor3f(0.2, 0.2, 0.9);
   if (c==ROUGE)
     glColor3f(1,0,0);
+}
+
+
+float clamp_min_max_f(float n, float min, float max){
+  if (n<min) return min;
+  if (n>=max) return max;
+  return n;
 }
