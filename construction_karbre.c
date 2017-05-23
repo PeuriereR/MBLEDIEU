@@ -299,10 +299,10 @@ void affiche_karbre_clipping2(karbre k,float3 m1, float3 m2, float3 vdir,float3 
       //affiche_cube(m1,m2);
       /* on peut verifier k->elem.type si on n'a pas que des arbres */
       if(intersection_arbre_vaisseau(pt_vaisseau,k->elem,vdir,vup,v90)){
-	if( k->elem.type==1)
-	  k->elem.type=2;
 	if (k->elem.type==2)
 	  INTERS_TRONC=1;
+	if( k->elem.type==1)
+	  k->elem.type=2;
       }
       if(k->elem.type==1){
 	glPushMatrix();
