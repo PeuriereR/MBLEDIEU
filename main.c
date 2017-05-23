@@ -4,11 +4,11 @@
 #include "construction_karbre.h"
 #include "util.h"
 
-#define LARGEUR_MAP 1000 // X <==> i 
+#define LARGEUR_MAP 500 // X <==> i 
 #define LONGUEUR_MAP 1000 // Y <==> j
 #define NB_MUNITIONS 500
 #define NB_ENNEMIS 10
-
+#define NB_MONTAGNES 150
 #define NB_ARBRES 500
 #define ARBRE_R 200
 #define NB_BOSQUET 30 // 
@@ -66,6 +66,8 @@ int key_haut,key_bas,key_droite,key_gauche;
 
 int dans_vaisseau=1;
 int a_portee_vaisseau=1;
+/* V_CAM: position de la caméra*/
+float3 V_OBJ_CAM;
 /* V_POS: position du joueur-vaisseau */
 float3 V_POS;
 /* S_VIT : vitesse du joueur-vaisseau */
@@ -79,6 +81,7 @@ float S_VIT_P;
 
 float vie;
 int mun;
+int score;
 float3 p2;
 float3 p1_hyperC,p2_hyperC;
 float3 p1_hyperC2,p2_hyperC2;
@@ -86,6 +89,11 @@ float3 p1_hyperC2,p2_hyperC2;
 float3 V_DIR;
 float3 V_90;
 float3 V_UP;
+
+float3 V_DIR_P;
+float3 V_90_P;
+float3 V_UP_P;
+
 float3 V_UP_INIT;
 float3 V_90_INIT;
 float3 tab_proj[50][3];
@@ -114,34 +122,36 @@ void ennemis(float3 centre){
 void intersection_munition(){
   float3 m1_lait;
   float3 m2_lait;
-  for(int i=0; i<NB_MUNITIONS; i++){
+  int i;
+  for(i=0; i<NB_MUNITIONS; i++){
     m1_lait=init_float3(tab_lait[i][0]-2,tab_lait[i][1]-2,tab_decors[(int)tab_lait[i][0]][(int)tab_lait[i][1]]-2);
     m2_lait=init_float3(tab_lait[i][0]+2,tab_lait[i][1]+2,tab_decors[(int)tab_lait[i][0]][(int)tab_lait[i][1]]+2);
     affiche_cube(m1_lait,m2_lait);
     
-    if (dans_cube(V_POS,m1_lait,m2_lait)
-      || dans_cube(init_float3(V_POS.x+10*V_DIR.x,
-			       V_POS.y+10*V_DIR.y,
-			       V_POS.z+10*V_DIR.z),m1_lait,m2_lait)
-      || dans_cube(init_float3(V_POS.x+10*V_90.x,
-			       V_POS.y+10*V_90.y,
-			       V_POS.z+10*V_90.z),m1_lait,m2_lait)
+    if (dans_cube(V_POS_P,m1_lait,m2_lait)
+      || dans_cube(init_float3(V_POS_P.x+10*V_DIR.x,
+			       V_POS_P.y+10*V_DIR.y,
+			       V_POS_P.z+10*V_DIR.z),m1_lait,m2_lait)
+      || dans_cube(init_float3(V_POS_P.x+10*V_90.x,
+			       V_POS_P.y+10*V_90.y,
+			       V_POS_P.z+10*V_90.z),m1_lait,m2_lait)
       
-      || dans_cube(init_float3(V_POS.x-10*V_90.x,
-			       V_POS.y-10*V_90.y,
-			       V_POS.z-10*V_90.z),m1_lait,m2_lait)
+      || dans_cube(init_float3(V_POS_P.x-10*V_90.x,
+			       V_POS_P.y-10*V_90.y,
+			       V_POS_P.z-10*V_90.z),m1_lait,m2_lait)
       
-      || dans_cube(init_float3(V_POS.x+10*V_UP.x,
-			       V_POS.y+10*V_UP.y,
-			       V_POS.z+10*V_UP.z),m1_lait,m2_lait)
+      || dans_cube(init_float3(V_POS_P.x+10*V_UP.x,
+			       V_POS_P.y+10*V_UP.y,
+			       V_POS_P.z+10*V_UP.z),m1_lait,m2_lait)
 
 	){
-      printf("INTERSLAIT\n");
-      //ICI +MUNITION
-      //FAIRE DISPARAITRE LA MUNITION
-      tab_lait[i][0]=-1;
-      mun=clamp_min_max_f(mun+5,0,50);
-
+      if (!dans_vaisseau){
+	printf("INTERSLAIT\n");
+	//ICI +MUNITION
+	//FAIRE DISPARAITRE LA MUNITION
+	tab_lait[i][0]=-1;
+	mun=clamp_min_max_f(mun+5,0,50);
+      }
     }
     
   }
@@ -218,12 +228,12 @@ void start_anim(){
 
     glEnd();
     if (start==1){
-      
-      if (first_pass){
-	vie= VIE_MAX;
-	mun = MUN_MAX;
-	first_pass = 0;
-      }
+  if (first_pass){
+    vie= VIE_MAX;
+    mun = MUN_MAX;
+    score=0;
+    first_pass = 0;
+  }
       start_ajout_x+=((float)LARGEUR_MAP/(float)LONGUEUR_MAP)*5;
       start_ajout_y+=((float)LONGUEUR_MAP/(float)LARGEUR_MAP)*5;
     }
@@ -493,78 +503,114 @@ void projectile(float3 direction, float3 f){
 
 
 void gestion_input(){
-  if (key_s == 1) {
-    /*
-      V_POS.z-=V_DIR.z;
-      V_POS.x-=V_DIR.x;
-      V_POS.y-=V_DIR.y;
-    */
-    S_VIT--;
-    if (COL_DET == 0) {
-      if (S_VIT < VIT_MIN ) {
-	S_VIT = VIT_MIN;
+  if (dans_vaisseau){ // Input quand on est dans le vaiseau
+    if (key_s == 1) {
+      /*
+	V_POS.z-=V_DIR.z;
+	V_POS.x-=V_DIR.x;
+	V_POS.y-=V_DIR.y;
+      */
+      S_VIT--;
+      if (COL_DET == 0) {
+	if (S_VIT < VIT_MIN ) {
+	  S_VIT = VIT_MIN;
+	}
+      }
+      else {
+	if (S_VIT < 0 ) {
+	  S_VIT = 0;
+	}
       }
     }
-    else {
-      if (S_VIT < 0 ) {
-	S_VIT = 0;
-      }
-    }
-  }
-  if (key_z == 1){
+    if (key_z == 1){
  
-    // MAJ DU CUBE
+      // MAJ DU CUBE
 
-    /*
-      V_POS.x+=V_DIR.x;
-      V_POS.z+=V_DIR.z;
-      V_POS.y+=V_DIR.y;
-    */
-    S_VIT++;
-    if (COL_DET == 1 )
-      S_VIT -= .5;
-    if (abs(S_VIT)>VIT_MAX)
-      S_VIT=VIT_MAX;
+      /*
+	V_POS.x+=V_DIR.x;
+	V_POS.z+=V_DIR.z;
+	V_POS.y+=V_DIR.y;
+      */
+      S_VIT++;
+      if (COL_DET == 1 )
+	S_VIT -= .5;
+      if (abs(S_VIT)>VIT_MAX)
+	S_VIT=VIT_MAX;
 
-  }
+    }
     
-  if (key_q == 1){
-    /* FORMULE DE RODRIGUES */
-    /* Rotation autour de l'axe DIR du VECTEUR_90*/
-    V_90=rodrigues(-1.2,V_90,V_DIR);
-    /* On reactualise le V_UP */
-    V_UP=produit_vectoriel(V_DIR,V_90);
+    if (key_q == 1){
+      /* FORMULE DE RODRIGUES */
+      /* Rotation autour de l'axe DIR du VECTEUR_90*/
+      V_90=rodrigues(-1.2,V_90,V_DIR);
+      /* On reactualise le V_UP */
+      V_UP=produit_vectoriel(V_DIR,V_90);
  
-  }
-  if (key_d == 1){
-    /* Rotation autour de l'axe DIR du VECTEUR_90*/
-    V_90=rodrigues(1.2,V_90,V_DIR);
-    /* On reactualise le V_UP */
-    V_UP=produit_vectoriel(V_DIR,V_90);
-  }
+    }
+    if (key_d == 1){
+      /* Rotation autour de l'axe DIR du VECTEUR_90*/
+      V_90=rodrigues(1.2,V_90,V_DIR);
+      /* On reactualise le V_UP */
+      V_UP=produit_vectoriel(V_DIR,V_90);
+    }
   
-  if (key_bas == 1){
-    V_DIR=rodrigues(-0.8,V_DIR,V_90);
-    V_UP=produit_vectoriel(V_DIR,V_90);
-  }
+    if (key_bas == 1){
+      V_DIR=rodrigues(-0.8,V_DIR,V_90);
+      V_UP=produit_vectoriel(V_DIR,V_90);
+    }
   
-  if (key_haut == 1){
-    V_DIR=rodrigues(0.8,V_DIR,V_90);
-    V_UP=produit_vectoriel(V_DIR,V_90);
-  }
+    if (key_haut == 1){
+      V_DIR=rodrigues(0.8,V_DIR,V_90);
+      V_UP=produit_vectoriel(V_DIR,V_90);
+    }
   
-  if (key_droite == 1) {
-    V_DIR=rodrigues(-0.8,V_DIR,V_UP);
-    V_90=produit_vectoriel(V_UP,V_DIR);
-  }
+    if (key_droite == 1) {
+      V_DIR=rodrigues(-0.8,V_DIR,V_UP);
+      V_90=produit_vectoriel(V_UP,V_DIR);
+    }
   
-  if (key_gauche == 1) {
-    V_DIR=rodrigues(0.8,V_DIR,V_UP);
-    V_90=produit_vectoriel(V_UP,V_DIR);
-  }
+    if (key_gauche == 1) {
+      V_DIR=rodrigues(0.8,V_DIR,V_UP);
+      V_90=produit_vectoriel(V_UP,V_DIR);
+    }
 
+  }
+  else { // input hors du vaisseau
+    if (key_s == 1) {
+      V_POS_P=f3_add_f3(V_POS_P,mul_float3(V_DIR_P,-1));
+    }
+    if (key_z == 1){
+      V_POS_P=f3_add_f3(V_POS_P,V_DIR_P);
+    }
+    
+    if (key_q == 1){
+      V_POS_P=f3_add_f3(V_POS_P,mul_float3(V_90_P,1));
+    }
+    if (key_d == 1){
+      V_POS_P=f3_add_f3(V_POS_P,mul_float3(V_90_P,-1));
+    }
+  
+    if (key_bas == 1){
+      V_DIR_P=rodrigues(0.8,V_DIR_P,V_90_P);
+      V_UP_P=produit_vectoriel(V_DIR_P,V_90_P);      
+    }
+  
+    if (key_haut == 1){
+      V_DIR_P=rodrigues(-0.8,V_DIR_P,V_90_P);
+      V_UP_P=produit_vectoriel(V_DIR_P,V_90_P);      
+    }
+  
+    if (key_droite == 1) {      
+      V_DIR_P=rodrigues(-0.8,V_DIR_P,V_UP_INIT);
+      V_90_P=produit_vectoriel(V_UP_P,V_DIR_P);      
+    }
+  
+    if (key_gauche == 1) {
+      V_DIR_P=rodrigues(0.8,V_DIR_P,V_UP_INIT);
+      V_90_P=produit_vectoriel(V_UP_P,V_DIR_P);      
+    }
 
-  //  printf("%d\n",key_haut);
+  }
   glutPostRedisplay();
 }
 
@@ -634,12 +680,50 @@ void affichage(){
   glFrustum(-24,24,-13,13,20,1000);
   //gluPerspective(100,1,0.1,1000);
 
-  
-  V_EYE.x=V_POS.x-30*V_DIR.x +  V_UP.x*8;
-  V_EYE.y=V_POS.y-30*V_DIR.y +  V_UP.y*8;
-  V_EYE.z=V_POS.z-30*V_DIR.z +  V_UP.z*8;
 
-  if (V_EYE.x > 0 && V_EYE.y > 0 && V_EYE.y < LONGUEUR_MAP && V_EYE.x < LARGEUR_MAP){ // On est bien à l'intérieur de la map
+  
+  if (!auto_scroll_toggle)
+    {
+      //       printf("vit : %f \n",mul_float3(V_DIR,S_VIT).z);
+      /* if (COL_DET == 0) {
+	if (S_VIT < VIT_MIN ) {
+	  S_VIT = VIT_MIN;
+	}
+	}*/
+  V_POS = f3_add_f3(V_POS,mul_float3(V_DIR,S_VIT));
+
+    }
+  if (dans_vaisseau) {
+    V_POS_P.x = V_POS.x;
+    V_POS_P.y = V_POS.y;
+    V_POS_P.z = V_POS.z;
+
+    V_DIR_P.x=V_DIR.x;
+    V_DIR_P.y=V_DIR.y;
+    V_DIR_P.z=V_DIR.z;
+
+    V_UP_P.x=V_UP.x;
+    V_UP_P.y=V_UP.y;
+    V_UP_P.z=V_UP.z;
+
+    V_90_P.x=V_90.x;
+    V_90_P.y=V_90.y;
+    V_90_P.z=V_90.z;
+  }
+  
+  V_OBJ_CAM.x = V_POS_P.x;
+  V_OBJ_CAM.y = V_POS_P.y;
+  V_OBJ_CAM.z = V_POS_P.z;
+
+    
+  V_EYE.x=V_POS_P.x-30*V_DIR_P.x +  V_UP_P.x*8;
+  V_EYE.y=V_POS_P.y-30*V_DIR_P.y +  V_UP_P.y*8;
+  V_EYE.z=V_POS_P.z-30*V_DIR_P.z +  V_UP_P.z*8;
+
+
+  /* Gestion des collisions de l'oeil avec le sol*/
+   
+ if (V_EYE.x > 0 && V_EYE.y > 0 && V_EYE.y < LONGUEUR_MAP && V_EYE.x < LARGEUR_MAP){ // On est bien à l'intérieur de la map
     if (V_EYE.z <=tab_decors[(int)V_EYE.x][(int)V_EYE.y]+1) { // On est au niveau du sol ( ou en-dessous!)
       /* Traitement en cas de collision avec le sol :*/
       V_EYE.z=tab_decors[(int)V_EYE.x][(int)V_EYE.y];
@@ -649,9 +733,9 @@ void affichage(){
   gluLookAt(V_EYE.x,
 	    V_EYE.y,
 	    V_EYE.z,
-	    V_POS.x,
-	    V_POS.y,
-	    V_POS.z,
+	    V_OBJ_CAM.x,
+	    V_OBJ_CAM.y,
+	    V_OBJ_CAM.z,
 	    V_UP.x,
 	    V_UP.y,
 	    V_UP.z
@@ -667,7 +751,8 @@ void affichage(){
 	
 	if(intersection_proj_ennemi(tab_proj[i])==1){
 	  tab_proj[i][0].x=-5000;
-	  fprintf(stderr,"JINTERSEQUTE\n");
+	  //fprintf(stderr,"JINTERSEQUTE\n");
+	  score++;
 	}
 	else{
 	  tab_proj[i][1].x+=5*tab_proj[i][0].x;
@@ -734,51 +819,42 @@ void affichage(){
 
   intersection_munition();
 
-
-  
-  /* Mise à jour du vecteur position */
-
- 
-  if (!auto_scroll_toggle)
-    {
-      //       printf("vit : %f \n",mul_float3(V_DIR,S_VIT).z);
-      /* if (COL_DET == 0) {
-	 if (S_VIT < VIT_MIN ) {
-	 S_VIT = VIT_MIN;
-	 }
-	 }*/
-      V_POS = f3_add_f3(V_POS,mul_float3(V_DIR,S_VIT));
-
-    }
-
   /* Gestion des collisions + gravité joueur */
+  if (dans_vaisseau){
   
-  if (V_POS.x > 0 && V_POS.y > 0 && V_POS.y < LONGUEUR_MAP && V_POS.x < LARGEUR_MAP){ // On est bien à l'intérieur de la map
-    if (V_POS.z <=tab_decors[(int)V_POS.x][(int)V_POS.y]+1) { // On est au niveau du sol ( ou en-dessous!)
-      /* Traitement en cas de collision avec le sol :*/
-      V_POS.z=tab_decors[(int)V_POS.x][(int)V_POS.y];
-      if (S_VIT > 2 && ARR==1 ) { /* On perd de la vie si on va trop vite et tant qu'on ne s'est pas arrêté */
-	vie--;
-      }
-      COL_DET=1;
+    if (V_POS.x > 0 && V_POS.y > 0 && V_POS.y < LONGUEUR_MAP && V_POS.x < LARGEUR_MAP){ // On est bien à l'intérieur de la map
+      if (V_POS.z <=tab_decors[(int)V_POS.x][(int)V_POS.y]+1) { // On est au niveau du sol ( ou en-dessous!)
+	/* Traitement en cas de collision avec le sol :*/
+   
+	V_POS.z=tab_decors[(int)V_POS.x][(int)V_POS.y];
+	if (S_VIT > 2 && ARR==1 ) { /* On perd de la vie si on va trop vite et tant qu'on ne s'est pas arrêté */
+	  vie--;
+	}
+	COL_DET=1;
 
-      S_VIT*=.8;
-      if (S_VIT < VIT_MIN ) {
-	ARR = 0 ;
+	S_VIT*=.8;
+	if (S_VIT < VIT_MIN ) {
+	  ARR = 0 ;
+	}
+	S_VIT = clamp_min_max_f(S_VIT,0,VIT_MAX); /* Dans tous les cas on réduit la vitesse */
       }
-      S_VIT = clamp_min_max_f(S_VIT,0,VIT_MAX); /* Dans tous les cas on réduit la vitesse */
-    }
-    else {
-      /* Traitement du cas courant : vol sans turbulences */
-      /* Prise en compte de la gravité : si le nez pointe vers le bas : acceleration sinon ralentissement */
-      float ps = produit_scalaire (V_UP_INIT,V_DIR);
-      S_VIT -= ps/4;
-      S_VIT = clamp_min_max_f(S_VIT,VIT_MIN,VIT_MAX);
-      COL_DET=0;
-      ARR=1;
+      else {
+	/* Traitement du cas courant : vol sans turbulences */
+	/* Prise en compte de la gravité : si le nez pointe vers le bas : acceleration sinon ralentissement */
+	float ps = produit_scalaire (V_UP_INIT,V_DIR);
+	S_VIT -= ps/4;
+	S_VIT = clamp_min_max_f(S_VIT,VIT_MIN,VIT_MAX);
+	COL_DET=0;
+	ARR=1;
+      }
     }
   }
-
+  else {
+    
+    if (V_POS_P.x > 0 && V_POS_P.y > 0 && V_POS_P.y < LONGUEUR_MAP && V_POS_P.x < LARGEUR_MAP){ // On est bien à l'intérieur de la map
+      V_POS_P.z=tab_decors[(int)V_POS_P.x][(int)V_POS_P.y]+1;      
+    }
+  }
   /* Dessin du 'vaisseau ' après mise à jour du vecteur position pour effet vitesse accru */
 
   
@@ -799,6 +875,15 @@ void affichage(){
 
   glColor4f(0,1,1,1);
 
+  if (!dans_vaisseau){
+    float3 h;
+    h.x=1;
+    h.y=1;
+    h.z=1;
+    affiche_cube(V_POS_P,f3_add_f3(V_POS_P,h));
+  }
+
+  
   /*
     for(i=0; i<LARGEUR_MAP; i=i+10){
     glVertex3f(i,0,0);
@@ -820,7 +905,8 @@ void affichage(){
 
   /* on pourra faire fonction generale avec le .z > type */
 
-  affiche_karbre_clipping(karbre8,V_POS,V_DIR,V_UP,V_90);
+  //  affiche_karbre_clipping(karbre8,V_POS,V_DIR,V_UP,V_90);
+    affiche_karbre_clipping(karbre8,V_POS_P,V_DIR_P,V_UP_P,V_90_P);
   
   //dessin_arbre();
   dessin_lait();
@@ -842,16 +928,19 @@ void affichage(){
   dessin_grille();
 
 
-
   
-  /* Dessin de l'interface */
-  if (start!=0) {
+  /* Dessin de l'interface */ 
+   if (start!=0) {
     
     /* Dessin jauge de vie */
     dessin_jauge(5,5,130,50,vie,BLEU,GRIS,ROUGE);
 
-    /* Dessin des munitions restantes */
-    dessin_munitions(150,5,130,50,mun,MUN_MAX,NOIR,GRIS);
+  /* Dessin des munitions restantes */
+  dessin_munitions(150,5,130,50,mun,MUN_MAX,NOIR,GRIS);
+
+  /* Affichage du score */
+  dessin_score(620,750,160,50,score,BLANC,NOIR,BLEU);
+
   }
   glutSwapBuffers();
 
@@ -920,13 +1009,19 @@ void keyPressed (unsigned char key, int x, int y) {
     else auto_scroll_toggle=1;
   }
   if (key==13){ // touche entrée
-    if (dans_vaisseau && COL_DET ){
-      printf("ça sort !! \n");
-      toggle(dans_vaisseau);
+    int modif=0;
+    //    printf("%f\n",S_VIT);
+    if (dans_vaisseau && COL_DET && S_VIT==0.0){
+      //      printf("ça sort !! \n");
+      modif=toggle(modif);
     }
-    if (!dans_vaisseau && a_portee_vaisseau){
-      printf("ça rentre\n");
+    if (!dans_vaisseau && a_portee_vaisseau && !modif){
+      //      printf("ça rentre\n");
+      modif=toggle(modif);
     }
+
+    if (modif)
+      dans_vaisseau=toggle(dans_vaisseau);
     
   }
 
@@ -1002,6 +1097,7 @@ int main(int argc, char**argv){
   r_1=r_2=r_3=0;
   vie=100;
   mun = 50;
+  score=0;
   srand((unsigned) time(&t));
 
   if ( (tab_decors = malloc (sizeof(float *) * LARGEUR_MAP )) == NULL ) {
@@ -1079,7 +1175,7 @@ int main(int argc, char**argv){
     key_haut=0;
     key_droite=0;
   */
-  V_POS = init_float3(0,0,0);
+  V_POS = init_float3(0,0,150);
   p2 = init_float3(10,10,10);
 
   V_DIR = init_float3(1,0,0);
@@ -1087,7 +1183,7 @@ int main(int argc, char**argv){
   V_90 = init_float3(0,1,0);
   V_UP = init_float3(0,0,1);
 
-  // V_90_INIT = V_90;
+  //  V_90_INIT = V_90;
   V_UP_INIT = V_UP;
   
   // Initialisation décors
@@ -1113,7 +1209,7 @@ int main(int argc, char**argv){
     tab_decors[i][150] = -50;
   */
   
-  for ( i =0 ; i<50 ; i++)
+  for ( i =0 ; i<NB_MONTAGNES ; i++)
     mountain(rand()%LARGEUR_MAP,rand()%LONGUEUR_MAP,rand()%150+30);
   
   for (  i = 0 ; i < 28; i++)   aplanir();
@@ -1145,8 +1241,9 @@ int main(int argc, char**argv){
   glutInitDisplayMode(GLUT_RGBA|GLUT_SINGLE|GLUT_DEPTH);
 
   //taille & pos
-  //  glutInitWindowSize(800,800); //ou fullscreen
-  // glutInitWindowPosition(50, 50);
+  //glutInitWindowSize(800,800); //ou fullscreen
+    // glutInitWindowPosition(50, 50);
+
   glutInitWindowSize(1920,1080);
 
 
