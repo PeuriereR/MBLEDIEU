@@ -169,6 +169,7 @@ void start_anim(){
 
 void mur_ennemi(){
   int i;
+  /* mur apparition */
   glBegin(GL_LINES);
   if (start==2){
     glColor4f(0,1,1,1);
@@ -181,7 +182,22 @@ void mur_ennemi(){
     barre_mur++;
     barre_mur= barre_mur%300;
 
+
+  
     glEnd();
+    
+    glColor4f(0.1,0.1,0.2,0.5);
+    glBegin(GL_QUADS);
+    glVertex3f(0,LONGUEUR_MAP,0);
+    glVertex3f(LARGEUR_MAP,LONGUEUR_MAP,0);
+      
+    glVertex3f(LARGEUR_MAP,LONGUEUR_MAP,300);
+    glVertex3f(0,LONGUEUR_MAP,300);
+
+    glEnd();
+  
+
+    /* mur disparition */
   }
 
 
@@ -550,7 +566,7 @@ void affichage(){
   for( i=0; i<10; i++){
     /* Methode patarasse */
     if(tab_ennemi[i].y!=-1){
-      if (tab_ennemi[i].y>=LONGUEUR_MAP || tab_ennemi[i].z<0){
+      if (tab_ennemi[i].y>=LONGUEUR_MAP+100 || tab_ennemi[i].z<0){
 	tab_ennemi[i].y=-1;
       }
       else{
@@ -661,7 +677,7 @@ void affichage(){
 
   /* on pourra faire fonction generale avec le .z > type */
 
-  affiche_karbre_clipping(karbre8,V_POS,V_DIR,V_UP);
+  affiche_karbre_clipping(karbre8,V_POS,V_DIR,V_UP,V_90);
   
   //dessin_arbre();
   dessin_lait();
@@ -936,6 +952,19 @@ int main(int argc, char**argv){
   glEnable( GL_BLEND );
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
   glEnable(GL_DEPTH_TEST);
+
+  
+  /*
+            glEnable(GL_FOG) ;
+            GLfloat fogcolor[4] = {0.1,0.1,0.2,0.2} ;
+            GLint fogmode = GL_EXP ;
+            glFogi (GL_FOG_MODE, fogmode) ;
+            glFogfv(GL_FOG_COLOR, fogcolor) ;
+            glFogf(GL_FOG_DENSITY, 0.005) ;
+            glFogf(GL_FOG_START, 29.0) ;
+            glFogf(GL_FOG_END, 3.0) ;
+  */
+
   //glutMouseFunc glutKeyboardFunc
   
   glutKeyboardFunc(keyPressed);

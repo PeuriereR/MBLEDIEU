@@ -239,7 +239,87 @@ void dessin_carton_lait(){
 
 }
 
+void dessin_tronc(){
+  
+  glColor3f(.8,.8,.8);
+  glBegin(GL_QUADS);
+  /* PIED*/
+  glVertex3f(1,1,-5);
+  glVertex3f(-1,1,-5);
+  glVertex3f(-1,1,3);
+  glVertex3f(1,1,3);
 
+  glVertex3f(1,1,-5);
+  glVertex3f(1,-1,-5);
+  glVertex3f(1,-1,3);
+  glVertex3f(1,1,3);
+
+  glVertex3f(1,-1,-5);
+  glVertex3f(-1,-1,-5);
+  glVertex3f(-1,-1,3);
+  glVertex3f(1,-1,3);
+
+  glVertex3f(-1,-1,-5);
+  glVertex3f(-1,1,-5);
+  glVertex3f(-1,1,3);
+  glVertex3f(-1,-1,3);
+
+
+
+  glVertex3f(1,1,-5);
+  glVertex3f(-1,1,-5);
+  glVertex3f(-1,-1,-5);
+  glVertex3f(1,-1,-5);
+
+  
+
+  glVertex3f(1,1,3);
+  glVertex3f(-1,1,3);
+  glVertex3f(-1,-1,3);
+  glVertex3f(1,-1,3);
+  
+  
+  glEnd();
+
+  glColor3f(.1,.1,.1);
+  glLineWidth(1.5);
+  glBegin(GL_LINES);
+  /* lignes arbre */
+  /* ligne cube */
+
+  
+  glVertex3f(1,1,-5);
+  glVertex3f(1,1,3);
+
+  glVertex3f(1,-1,-5);
+  glVertex3f(1,-1,3);
+
+  glVertex3f(-1,-1,-5);
+  glVertex3f(-1,-1,3);
+
+  glVertex3f(-1,1,-5);
+  glVertex3f(-1,1,3);
+
+  /*dessus tronc*/
+  glVertex3f(1,1,3);
+    glVertex3f(-1,1,3);
+
+    
+    glVertex3f(-1,1,3);
+      glVertex3f(-1,-1,3);
+    
+    
+      glVertex3f(-1,-1,3);
+        glVertex3f(1,-1,3);
+
+	
+        glVertex3f(1,-1,3);
+	
+  glVertex3f(1,1,3);
+  
+
+  glEnd();
+}
 void dessin_arbre2(){
   /* glScalef a passer en param
      + translate */
@@ -272,7 +352,7 @@ void dessin_arbre2(){
   glVertex3f(1,1,-3);
   glVertex3f(-1,1,-3);
   glVertex3f(-1,-1,-3);
-  glVertex3f(1,-1,3);
+  glVertex3f(1,-1,-3);
 
   
   glColor3f(.2,.25,.2);
