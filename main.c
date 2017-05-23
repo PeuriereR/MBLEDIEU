@@ -141,7 +141,7 @@ void intersection_munition(){
 
 	){
       if (!dans_vaisseau){
-	printf("INTERSLAIT\n");
+	//	printf("INTERSLAIT\n");
 	//ICI +MUNITION
 	//FAIRE DISPARAITRE LA MUNITION
 	tab_lait[i][0]=-1;
@@ -152,9 +152,11 @@ void intersection_munition(){
   }
 
   if (INTERS_TRONC==1){
-    S_VIT=0;
-    INTERS_TRONC=0;
-    vie-=30;
+    if (dans_vaisseau && S_VIT > 2){
+      S_VIT=0;
+      INTERS_TRONC=0;
+      vie-=30;
+    }
   }
 
 }
@@ -996,7 +998,7 @@ void keyPressed (unsigned char key, int x, int y) {
     key_m=1;
   }
   if (key == 32){ // touche espace
-    if (mun > 0 ){
+    if (mun > 0 && dans_vaisseau ){
       projectile(V_DIR,V_POS);
       //   fprintf(stderr,"VEC: %f %f %f \n",V_DIR.x+cote_projectile,V_DIR.y+cote_projectile,V_DIR.z+cote_projectile);
       mun --;
