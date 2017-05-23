@@ -116,34 +116,36 @@ void ennemis(float3 centre){
 void intersection_munition(){
   float3 m1_lait;
   float3 m2_lait;
-  for(int i=0; i<200; i++){
+  int i;
+  for( i=0; i<200; i++){
     m1_lait=init_float3(tab_lait[i][0]-2,tab_lait[i][1]-2,tab_decors[(int)tab_lait[i][0]][(int)tab_lait[i][1]]-2);
     m2_lait=init_float3(tab_lait[i][0]+2,tab_lait[i][1]+2,tab_decors[(int)tab_lait[i][0]][(int)tab_lait[i][1]]+2);
     affiche_cube(m1_lait,m2_lait);
     
-    if (dans_cube(V_POS,m1_lait,m2_lait)
-      || dans_cube(init_float3(V_POS.x+10*V_DIR.x,
-			       V_POS.y+10*V_DIR.y,
-			       V_POS.z+10*V_DIR.z),m1_lait,m2_lait)
-      || dans_cube(init_float3(V_POS.x+10*V_90.x,
-			       V_POS.y+10*V_90.y,
-			       V_POS.z+10*V_90.z),m1_lait,m2_lait)
+    if (dans_cube(V_POS_P,m1_lait,m2_lait)
+      || dans_cube(init_float3(V_POS_P.x+10*V_DIR.x,
+			       V_POS_P.y+10*V_DIR.y,
+			       V_POS_P.z+10*V_DIR.z),m1_lait,m2_lait)
+      || dans_cube(init_float3(V_POS_P.x+10*V_90.x,
+			       V_POS_P.y+10*V_90.y,
+			       V_POS_P.z+10*V_90.z),m1_lait,m2_lait)
       
-      || dans_cube(init_float3(V_POS.x-10*V_90.x,
-			       V_POS.y-10*V_90.y,
-			       V_POS.z-10*V_90.z),m1_lait,m2_lait)
+      || dans_cube(init_float3(V_POS_P.x-10*V_90.x,
+			       V_POS_P.y-10*V_90.y,
+			       V_POS_P.z-10*V_90.z),m1_lait,m2_lait)
       
-      || dans_cube(init_float3(V_POS.x+10*V_UP.x,
-			       V_POS.y+10*V_UP.y,
-			       V_POS.z+10*V_UP.z),m1_lait,m2_lait)
+      || dans_cube(init_float3(V_POS_P.x+10*V_UP.x,
+			       V_POS_P.y+10*V_UP.y,
+			       V_POS_P.z+10*V_UP.z),m1_lait,m2_lait)
 
 	){
-      printf("INTERSLAIT\n");
-      //ICI +MUNITION
-      //FAIRE DISPARAITRE LA MUNITION
-      tab_lait[i][0]=-1;
-      mun=clamp_min_max_f(mun+5,0,50);
-
+      if (!dans_vaisseau){
+	printf("INTERSLAIT\n");
+	//ICI +MUNITION
+	//FAIRE DISPARAITRE LA MUNITION
+	tab_lait[i][0]=-1;
+	mun=clamp_min_max_f(mun+5,0,50);
+      }
     }
     
   }
