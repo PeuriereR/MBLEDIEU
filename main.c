@@ -61,6 +61,8 @@ int key_haut,key_bas,key_droite,key_gauche;
 
 int dans_vaisseau=1;
 int a_portee_vaisseau=1;
+/* V_CAM: position de la caméra*/
+float3 V_OBJ_CAM;
 /* V_POS: position du joueur-vaisseau */
 float3 V_POS;
 /* S_VIT : vitesse du joueur-vaisseau */
@@ -81,6 +83,11 @@ float3 p1_hyperC2,p2_hyperC2;
 float3 V_DIR;
 float3 V_90;
 float3 V_UP;
+
+float3 V_DIR_P;
+float3 V_90_P;
+float3 V_UP_P;
+
 float3 V_UP_INIT;
 float3 V_90_INIT;
 float3 tab_proj[50][3];
@@ -437,78 +444,114 @@ void projectile(float3 direction, float3 f){
 
 
 void gestion_input(){
-  if (key_s == 1) {
-    /*
-      V_POS.z-=V_DIR.z;
-      V_POS.x-=V_DIR.x;
-      V_POS.y-=V_DIR.y;
-    */
-    S_VIT--;
-    if (COL_DET == 0) {
-      if (S_VIT < VIT_MIN ) {
-	S_VIT = VIT_MIN;
+  if (dans_vaisseau){ // Input quand on est dans le vaiseau
+    if (key_s == 1) {
+      /*
+	V_POS.z-=V_DIR.z;
+	V_POS.x-=V_DIR.x;
+	V_POS.y-=V_DIR.y;
+      */
+      S_VIT--;
+      if (COL_DET == 0) {
+	if (S_VIT < VIT_MIN ) {
+	  S_VIT = VIT_MIN;
+	}
+      }
+      else {
+	if (S_VIT < 0 ) {
+	  S_VIT = 0;
+	}
       }
     }
-    else {
-      if (S_VIT < 0 ) {
-	S_VIT = 0;
-      }
-    }
-  }
-  if (key_z == 1){
+    if (key_z == 1){
  
-    // MAJ DU CUBE
+      // MAJ DU CUBE
 
-    /*
-      V_POS.x+=V_DIR.x;
-      V_POS.z+=V_DIR.z;
-      V_POS.y+=V_DIR.y;
-    */
-    S_VIT++;
-    if (COL_DET == 1 )
-      S_VIT -= .5;
-    if (abs(S_VIT)>VIT_MAX)
-      S_VIT=VIT_MAX;
+      /*
+	V_POS.x+=V_DIR.x;
+	V_POS.z+=V_DIR.z;
+	V_POS.y+=V_DIR.y;
+      */
+      S_VIT++;
+      if (COL_DET == 1 )
+	S_VIT -= .5;
+      if (abs(S_VIT)>VIT_MAX)
+	S_VIT=VIT_MAX;
 
-  }
+    }
     
-  if (key_q == 1){
-    /* FORMULE DE RODRIGUES */
-    /* Rotation autour de l'axe DIR du VECTEUR_90*/
-    V_90=rodrigues(-1.2,V_90,V_DIR);
-    /* On reactualise le V_UP */
-    V_UP=produit_vectoriel(V_DIR,V_90);
+    if (key_q == 1){
+      /* FORMULE DE RODRIGUES */
+      /* Rotation autour de l'axe DIR du VECTEUR_90*/
+      V_90=rodrigues(-1.2,V_90,V_DIR);
+      /* On reactualise le V_UP */
+      V_UP=produit_vectoriel(V_DIR,V_90);
  
-  }
-  if (key_d == 1){
-    /* Rotation autour de l'axe DIR du VECTEUR_90*/
-    V_90=rodrigues(1.2,V_90,V_DIR);
-    /* On reactualise le V_UP */
-    V_UP=produit_vectoriel(V_DIR,V_90);
-  }
+    }
+    if (key_d == 1){
+      /* Rotation autour de l'axe DIR du VECTEUR_90*/
+      V_90=rodrigues(1.2,V_90,V_DIR);
+      /* On reactualise le V_UP */
+      V_UP=produit_vectoriel(V_DIR,V_90);
+    }
   
-  if (key_bas == 1){
-    V_DIR=rodrigues(-0.8,V_DIR,V_90);
-    V_UP=produit_vectoriel(V_DIR,V_90);
-  }
+    if (key_bas == 1){
+      V_DIR=rodrigues(-0.8,V_DIR,V_90);
+      V_UP=produit_vectoriel(V_DIR,V_90);
+    }
   
-  if (key_haut == 1){
-    V_DIR=rodrigues(0.8,V_DIR,V_90);
-    V_UP=produit_vectoriel(V_DIR,V_90);
-  }
+    if (key_haut == 1){
+      V_DIR=rodrigues(0.8,V_DIR,V_90);
+      V_UP=produit_vectoriel(V_DIR,V_90);
+    }
   
-  if (key_droite == 1) {
-    V_DIR=rodrigues(-0.8,V_DIR,V_UP);
-    V_90=produit_vectoriel(V_UP,V_DIR);
-  }
+    if (key_droite == 1) {
+      V_DIR=rodrigues(-0.8,V_DIR,V_UP);
+      V_90=produit_vectoriel(V_UP,V_DIR);
+    }
   
-  if (key_gauche == 1) {
-    V_DIR=rodrigues(0.8,V_DIR,V_UP);
-    V_90=produit_vectoriel(V_UP,V_DIR);
-  }
+    if (key_gauche == 1) {
+      V_DIR=rodrigues(0.8,V_DIR,V_UP);
+      V_90=produit_vectoriel(V_UP,V_DIR);
+    }
 
+  }
+  else { // input hors du vaisseau
+    if (key_s == 1) {
+      V_POS_P=f3_add_f3(V_POS_P,mul_float3(V_DIR_P,-1));
+    }
+    if (key_z == 1){
+      V_POS_P=f3_add_f3(V_POS_P,V_DIR_P);
+    }
+    
+    if (key_q == 1){
+      V_POS_P=f3_add_f3(V_POS_P,mul_float3(V_90_P,1));
+    }
+    if (key_d == 1){
+      V_POS_P=f3_add_f3(V_POS_P,mul_float3(V_90_P,-1));
+    }
+  
+    if (key_bas == 1){
+      V_DIR_P=rodrigues(0.8,V_DIR_P,V_90_P);
+      V_UP_P=produit_vectoriel(V_DIR_P,V_90_P);      
+    }
+  
+    if (key_haut == 1){
+      V_DIR_P=rodrigues(-0.8,V_DIR_P,V_90_P);
+      V_UP_P=produit_vectoriel(V_DIR_P,V_90_P);      
+    }
+  
+    if (key_droite == 1) {      
+      V_DIR_P=rodrigues(-0.8,V_DIR_P,V_UP_P);
+      V_90_P=produit_vectoriel(V_UP_P,V_DIR_P);      
+    }
+  
+    if (key_gauche == 1) {
+      V_DIR_P=rodrigues(0.8,V_DIR_P,V_UP_P);
+      V_90_P=produit_vectoriel(V_UP_P,V_DIR_P);      
+    }
 
-  //  printf("%d\n",key_haut);
+  }
   glutPostRedisplay();
 }
 
@@ -578,11 +621,49 @@ Frustum en 1920 x 1080 ??
   glFrustum(-24,24,-13,13,20,1000);
   //gluPerspective(100,1,0.1,1000);
 
-  
-  V_EYE.x=V_POS.x-30*V_DIR.x +  V_UP.x*8;
-  V_EYE.y=V_POS.y-30*V_DIR.y +  V_UP.y*8;
-  V_EYE.z=V_POS.z-30*V_DIR.z +  V_UP.z*8;
 
+  
+  if (!auto_scroll_toggle)
+    {
+      //       printf("vit : %f \n",mul_float3(V_DIR,S_VIT).z);
+      /* if (COL_DET == 0) {
+	if (S_VIT < VIT_MIN ) {
+	  S_VIT = VIT_MIN;
+	}
+	}*/
+  V_POS = f3_add_f3(V_POS,mul_float3(V_DIR,S_VIT));
+
+    }
+  if (dans_vaisseau) {
+    V_POS_P.x = V_POS.x;
+    V_POS_P.y = V_POS.y;
+    V_POS_P.z = V_POS.z;
+
+    V_DIR_P.x=V_DIR.x;
+    V_DIR_P.y=V_DIR.y;
+    V_DIR_P.z=V_DIR.z;
+
+    V_UP_P.x=V_UP.x;
+    V_UP_P.y=V_UP.y;
+    V_UP_P.z=V_UP.z;
+
+    V_90_P.x=V_90.x;
+    V_90_P.y=V_90.y;
+    V_90_P.z=V_90.z;
+  }
+  
+  V_OBJ_CAM.x = V_POS_P.x;
+  V_OBJ_CAM.y = V_POS_P.y;
+  V_OBJ_CAM.z = V_POS_P.z;
+
+    
+  V_EYE.x=V_POS_P.x-30*V_DIR_P.x +  V_UP_P.x*8;
+  V_EYE.y=V_POS_P.y-30*V_DIR_P.y +  V_UP_P.y*8;
+  V_EYE.z=V_POS_P.z-30*V_DIR_P.z +  V_UP_P.z*8;
+
+
+  /* Gestion des collisions de l'oeil avec le sol*/
+   
  if (V_EYE.x > 0 && V_EYE.y > 0 && V_EYE.y < LONGUEUR_MAP && V_EYE.x < LARGEUR_MAP){ // On est bien à l'intérieur de la map
     if (V_EYE.z <=tab_decors[(int)V_EYE.x][(int)V_EYE.y]+1) { // On est au niveau du sol ( ou en-dessous!)
       /* Traitement en cas de collision avec le sol :*/
@@ -593,9 +674,9 @@ Frustum en 1920 x 1080 ??
   gluLookAt(V_EYE.x,
 	    V_EYE.y,
 	    V_EYE.z,
-	    V_POS.x,
-	    V_POS.y,
-	    V_POS.z,
+	    V_OBJ_CAM.x,
+	    V_OBJ_CAM.y,
+	    V_OBJ_CAM.z,
 	    V_UP.x,
 	    V_UP.y,
 	    V_UP.z
@@ -681,46 +762,43 @@ Frustum en 1920 x 1080 ??
   /* Mise à jour du vecteur position */
 
  
-  if (!auto_scroll_toggle)
-    {
-      //       printf("vit : %f \n",mul_float3(V_DIR,S_VIT).z);
-      /* if (COL_DET == 0) {
-	if (S_VIT < VIT_MIN ) {
-	  S_VIT = VIT_MIN;
-	}
-	}*/
-  V_POS = f3_add_f3(V_POS,mul_float3(V_DIR,S_VIT));
-
-    }
 
   /* Gestion des collisions + gravité joueur */
+  if (dans_vaisseau){
   
-  if (V_POS.x > 0 && V_POS.y > 0 && V_POS.y < LONGUEUR_MAP && V_POS.x < LARGEUR_MAP){ // On est bien à l'intérieur de la map
-    if (V_POS.z <=tab_decors[(int)V_POS.x][(int)V_POS.y]+1) { // On est au niveau du sol ( ou en-dessous!)
-      /* Traitement en cas de collision avec le sol :*/
-      V_POS.z=tab_decors[(int)V_POS.x][(int)V_POS.y];
-      if (S_VIT > 2 && ARR==1 ) { /* On perd de la vie si on va trop vite et tant qu'on ne s'est pas arrêté */
-	vie--;
-      }
-      COL_DET=1;
+    if (V_POS.x > 0 && V_POS.y > 0 && V_POS.y < LONGUEUR_MAP && V_POS.x < LARGEUR_MAP){ // On est bien à l'intérieur de la map
+      if (V_POS.z <=tab_decors[(int)V_POS.x][(int)V_POS.y]+1) { // On est au niveau du sol ( ou en-dessous!)
+	/* Traitement en cas de collision avec le sol :*/
+   
+	V_POS.z=tab_decors[(int)V_POS.x][(int)V_POS.y];
+	if (S_VIT > 2 && ARR==1 ) { /* On perd de la vie si on va trop vite et tant qu'on ne s'est pas arrêté */
+	  vie--;
+	}
+	COL_DET=1;
 
-      S_VIT*=.8;
-      if (S_VIT < VIT_MIN ) {
-	ARR = 0 ;
+	S_VIT*=.8;
+	if (S_VIT < VIT_MIN ) {
+	  ARR = 0 ;
+	}
+	S_VIT = clamp_min_max_f(S_VIT,0,VIT_MAX); /* Dans tous les cas on réduit la vitesse */
       }
-      S_VIT = clamp_min_max_f(S_VIT,0,VIT_MAX); /* Dans tous les cas on réduit la vitesse */
-    }
-    else {
-      /* Traitement du cas courant : vol sans turbulences */
-      /* Prise en compte de la gravité : si le nez pointe vers le bas : acceleration sinon ralentissement */
-      float ps = produit_scalaire (V_UP_INIT,V_DIR);
-      S_VIT -= ps/4;
-      S_VIT = clamp_min_max_f(S_VIT,VIT_MIN,VIT_MAX);
-      COL_DET=0;
-      ARR=1;
+      else {
+	/* Traitement du cas courant : vol sans turbulences */
+	/* Prise en compte de la gravité : si le nez pointe vers le bas : acceleration sinon ralentissement */
+	float ps = produit_scalaire (V_UP_INIT,V_DIR);
+	S_VIT -= ps/4;
+	S_VIT = clamp_min_max_f(S_VIT,VIT_MIN,VIT_MAX);
+	COL_DET=0;
+	ARR=1;
+      }
     }
   }
-
+  else {
+    
+    if (V_POS_P.x > 0 && V_POS_P.y > 0 && V_POS_P.y < LONGUEUR_MAP && V_POS_P.x < LARGEUR_MAP){ // On est bien à l'intérieur de la map
+      V_POS_P.z=tab_decors[(int)V_POS_P.x][(int)V_POS_P.y]+1;      
+    }
+  }
   /* Dessin du 'vaisseau ' après mise à jour du vecteur position pour effet vitesse accru */
 
   
@@ -741,6 +819,15 @@ Frustum en 1920 x 1080 ??
 
   glColor4f(0,1,1,1);
 
+  if (!dans_vaisseau){
+    float3 h;
+    h.x=1;
+    h.y=1;
+    h.z=1;
+    affiche_cube(V_POS_P,f3_add_f3(V_POS_P,h));
+  }
+
+  
   /*
   for(i=0; i<LARGEUR_MAP; i=i+10){
     glVertex3f(i,0,0);
@@ -862,13 +949,19 @@ void keyPressed (unsigned char key, int x, int y) {
     else auto_scroll_toggle=1;
   }
   if (key==13){ // touche entrée
-    if (dans_vaisseau && COL_DET ){
-      printf("ça sort !! \n");
-      toggle(dans_vaisseau);
+    int modif=0;
+    //    printf("%f\n",S_VIT);
+    if (dans_vaisseau && COL_DET && S_VIT==0.0){
+      //      printf("ça sort !! \n");
+      modif=toggle(modif);
     }
-    if (!dans_vaisseau && a_portee_vaisseau){
-      printf("ça rentre\n");
+    if (!dans_vaisseau && a_portee_vaisseau && !modif){
+      //      printf("ça rentre\n");
+      modif=toggle(modif);
     }
+
+    if (modif)
+      dans_vaisseau=toggle(dans_vaisseau);
     
   }
 
@@ -991,7 +1084,7 @@ int main(int argc, char**argv){
   V_90 = init_float3(0,1,0);
   V_UP = init_float3(0,0,1);
 
-  // V_90_INIT = V_90;
+  //  V_90_INIT = V_90;
   V_UP_INIT = V_UP;
   
   // Initialisation décors
@@ -1049,8 +1142,9 @@ int main(int argc, char**argv){
   glutInitDisplayMode(GLUT_RGBA|GLUT_SINGLE|GLUT_DEPTH);
 
   //taille & pos
-  //  glutInitWindowSize(800,800); //ou fullscreen
-  // glutInitWindowPosition(50, 50);
+  //glutInitWindowSize(800,800); //ou fullscreen
+    // glutInitWindowPosition(50, 50);
+
   glutInitWindowSize(1920,1080);
 
 
