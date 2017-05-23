@@ -22,6 +22,8 @@
 
 int barre_mur=1;
 
+float3 pt_inters;
+
 /* Variables start truc jaune */
 float start_ajout_x;
 float start_ajout_y;
@@ -100,6 +102,21 @@ float3 tab_proj[50][3];
 float3 V_EYE;
 
 
+void fin(){
+  if(vie<=0){
+    printf("FINIIIIIIIIIIIIIIIIIIIIIII\n");
+    karbre8=NULL;
+    glClearColor(0.5,0.1,0.2,0.2);
+
+
+  glutPostRedisplay();
+
+
+  }
+
+
+  }
+
 
 void ennemis(float3 centre){
   int i;
@@ -160,10 +177,13 @@ void intersection_munition(){
     if (dans_vaisseau && S_VIT > 2){
       S_VIT=0;
       INTERS_TRONC=0;
-      vie-=30;
+      if(distance_point(V_POS,pt_inters)>100){
+	vie-=30;
+      }
+      pt_inters=V_POS;      
     }
   }
-
+  
 }
 
 int intersection_proj_ennemi(float3 proj[3]){
@@ -684,6 +704,7 @@ void affichage(){
 
 
   
+  fin();
   if (!auto_scroll_toggle)
     {
       //       printf("vit : %f \n",mul_float3(V_DIR,S_VIT).z);
@@ -930,6 +951,10 @@ void affichage(){
   dessin_grille();
 
 
+  /* ICIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIiiiiiiiiiiiiiiiiiiiii */
+
+  if(distance_point(V_POS,pt_inters)>100)
+    pt_inters=init_float3(-5000,-5000,-500);
   
   /* Dessin de l'interface */ 
    if (start!=0) {
@@ -1228,7 +1253,7 @@ int main(int argc, char**argv){
     tab_chute_ennemi[i][0]=0;
     tab_chute_ennemi[i][1]=0;
   }
-  
+  pt_inters=init_float3(-5000,-5000,-5000);
   /*
 
     fprintf(stderr,"VECT: %f %f %f \n",V_UP.x,V_UP.y,V_UP.z);
