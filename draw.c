@@ -185,6 +185,20 @@ X:   1 2       3 4
   
 }
 
+void dessin_boussole(float3 v_pos_p, float3 v_pos){
+ 
+  glBegin(GL_LINES);
+  couleur(FRAMBOISE);
+  glVertex3f(v_pos_p.x,v_pos_p.y,v_pos_p.z+3);
+  glVertex3f(v_pos.x,v_pos.y,v_pos.z);
+  //  glVertex3f((v_pos_p.x+b.x)/norme_b,(v_pos_p.y+b.y)/norme_b,(v_pos_p.z+b.z)/norme_b);
+  //  glVertex3f((v_pos_p.x+b.x),(v_pos_p.y+b.y),(v_pos_p.z+b.z));
+  
+  //  glVertex3f(f3_add_f3(v_pos_p,b).x,f3_add_f3(v_pos_p,b).y,f3_add_f3(v_pos_p,b).z);
+  glEnd();
+
+};
+
 void affiche_cube_plein(float3 p1, float3 p2, float opacity){
   
   glBegin(GL_QUADS);
@@ -623,6 +637,9 @@ void couleur(int c){
     glColor3f(0,0,0);
   if (c==BLANC)
     glColor3f(1,1,1);
+  if (c==FRAMBOISE)
+    glColor3f(.9,.1,.2);
+
 }
 
 

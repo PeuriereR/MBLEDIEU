@@ -51,6 +51,8 @@ int** tab_chute_ennemi;
 // 1 - angle de chute
 // 2 - vitesse
 
+float3 diff_pos_pos_p;
+float norme_diff_pos_pos_p ;
 int rand_seed;
 int nuages_toggle=1;
 int auto_scroll_toggle=1;
@@ -634,6 +636,7 @@ void gestion_input(){
       V_DIR_P=rodrigues(0.8,V_DIR_P,V_UP_INIT);
       V_90_P=produit_vectoriel(V_UP_P,V_DIR_P);      
     }
+    
 
   }
   glutPostRedisplay();
@@ -665,6 +668,17 @@ void affichage(){
     printf("x:%f y:%f z:%f\n",(p1.x+p2.x)/2,(p1.y+p2.y)/2,(p1.z+p2.z)/2);
     else printf("\n");
   */
+  diff_pos_pos_p.x=V_POS.x-V_POS_P.x;
+  diff_pos_pos_p.y=V_POS.y-V_POS_P.y;
+  diff_pos_pos_p.z=V_POS.z-V_POS_P.z;
+
+  norme_diff_pos_pos_p = norme_vecteur(diff_pos_pos_p);
+  if (norme_diff_pos_pos_p < 30 ) {
+    a_portee_vaisseau = 1;
+  }
+  else a_portee_vaisseau = 0;
+
+  
   gestion_input();
 
   // float3 centre_cube=milieu_cube(p1,p2);
@@ -906,6 +920,11 @@ void affichage(){
     h.y=1;
     h.z=1;
     affiche_cube(V_POS_P,f3_add_f3(V_POS_P,h));
+
+    
+    if (key_m) {
+      dessin_boussole(V_POS_P, V_POS);
+    }
   }
 
   
@@ -957,17 +976,18 @@ void affichage(){
     pt_inters=init_float3(-5000,-5000,-500);
   
   /* Dessin de l'interface */ 
-   if (start!=0) {
+  if (start!=0) {
     
     /* Dessin jauge de vie */
     dessin_jauge(5,5,130,50,vie,BLEU,GRIS,ROUGE);
-
-  /* Dessin des munitions restantes */
-  dessin_munitions(150,5,130,50,mun,MUN_MAX,NOIR,GRIS);
-
-  /* Affichage du score */
-  dessin_score(620,750,160,50,score,BLANC,NOIR,BLEU);
-
+    
+    /* Dessin des munitions restantes */
+    dessin_munitions(150,5,130,50,mun,MUN_MAX,NOIR,GRIS);
+    
+    /* Affichage du score */
+    dessin_score(620,750,160,50,score,BLANC,NOIR,BLEU);
+    
+    
   }
   glutSwapBuffers();
 
@@ -985,20 +1005,8 @@ void keyUp (unsigned char key, int x, int y) {
   if (key == 's'){    
     key_s=0;
   }
-  if (key == 'p'){    
-    key_p=0;
-    if (key_q==2)
-      key_q=1;
-    if (key_d==2)
-      key_d=1;
-  }
-  if (key == 'm'){    
-    key_m=0;
-    if (key_q==2)
-      key_q=1;
-    if (key_d==2)
-      key_d=1;
-  }
+ 
+
 }
 void keyPressed (unsigned char key, int x, int y) {
   if (key == 'q') {
@@ -1017,7 +1025,7 @@ void keyPressed (unsigned char key, int x, int y) {
     key_p=1;
   }
   if (key == 'm'){    
-    key_m=1;
+    key_m=toggle(key_m);
   }
   if (key == 32){ // touche espace
     if (mun > 0 && dans_vaisseau ){

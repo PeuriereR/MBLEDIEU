@@ -6,7 +6,7 @@
 #define ROUGE 3
 #define NOIR 4
 #define BLANC 5
-
+#define FRAMBOISE 6
 void affiche_cube_plein(float3 p1, float3 p2, float opacity);
 void affiche_cube(float3 p1, float3 p2);
 void dessin_carton_lait();
@@ -21,3 +21,4 @@ void dessin_score(float coord_x, float coord_y,float largeur, float hauteur, int
 
 void dessin_chiffre(float coord_x, float coord_y, float largeur, float hauteur, float epaisseur, int valeur);
 void dessin_rectangle(float x1, float y1, float x2, float y2);
+void dessin_boussole(float3 v_pos_p, float3 v_pos);
