@@ -20,11 +20,15 @@ int start=0;
 int first_pass=1;
 float3 tab_ennemi[10];
 int tab_chute_ennemi[10][3];
+// 0 - est en train de tomber
+// 1 - angle de chute
+// 2 - vitesse
+
 
 
 karbre karbre8;
 int r_1,r_2,r_3;
-  int seuil;
+int seuil;
 // Variables detection collision
 float r_sphere_joueur;
 int COL_DET;
@@ -103,7 +107,7 @@ void ennemis(float3 centre){
 int intersection_proj_ennemi(float3 proj[3]){
   int i;
   for(i=0; i<10; i++){
-    if(distance_point(proj[1],proj[1])/2 + distance_point(init_float3(tab_ennemi[i].x-10,tab_ennemi[i].y-10,tab_ennemi[i].z-10),init_float3(tab_ennemi[i].x+10,tab_ennemi[i].y+10,tab_ennemi[i].z+10))/2 >
+    if(distance_point(proj[1],proj[1])/2 + distance_point(init_float3(tab_ennemi[i].x-6*tab_chute_ennemi[i][2],tab_ennemi[i].y-6*tab_chute_ennemi[i][2],tab_ennemi[i].z-6*tab_chute_ennemi[i][2]),init_float3(tab_ennemi[i].x+6*tab_chute_ennemi[i][2],tab_ennemi[i].y+6*tab_chute_ennemi[i][2],tab_ennemi[i].z+6*tab_chute_ennemi[i][2]))/2 >
        distance_point(milieu_cube(proj[1],proj[2]),tab_ennemi[i])){
       tab_chute_ennemi[i][0]=1;
       return 1;
@@ -118,11 +122,21 @@ void intersection_ennemi_ennemi(){
   for(i=0; i<10; i++){
     
     for(j=1; j<10; j++){
-      if(distance_point(init_float3(tab_ennemi[i].x-10,tab_ennemi[i].y-10,tab_ennemi[i].z-10),init_float3(tab_ennemi[i].x+10,tab_ennemi[i].y+10,tab_ennemi[i].z+10))/2 + distance_point(init_float3(tab_ennemi[i].x-10,tab_ennemi[(i+j)%10].y-10,tab_ennemi[(i+j)%10].z-10),init_float3(tab_ennemi[(i+j)%10].x+10,tab_ennemi[(i+j)%10].y+10,tab_ennemi[(i+j)%10].z+10))/2 >
-	 distance_point(tab_ennemi[i],tab_ennemi[(i+j)%10])){
+      // -5 valeur arbitraire pour ne pas avoir de gros écarts;
+      if(distance_point(init_float3(tab_ennemi[i].x-6*tab_chute_ennemi[i][2],tab_ennemi[i].y-6*tab_chute_ennemi[i][2],tab_ennemi[i].z-6*tab_chute_ennemi[i][2]),init_float3(tab_ennemi[i].x+6*tab_chute_ennemi[i][2],tab_ennemi[i].y+6*tab_chute_ennemi[i][2],tab_ennemi[i].z+6*tab_chute_ennemi[i][2]))/2 +
+	 distance_point(init_float3(tab_ennemi[(i+j)%10].x-6*tab_chute_ennemi[(i+j)%10][2],tab_ennemi[(i+j)%10].y-6*tab_chute_ennemi[(i+j)%10][2],tab_ennemi[(i+j)%10].z-6*tab_chute_ennemi[(i+j)%10][2]),init_float3(tab_ennemi[(i+j)%10].x+6*tab_chute_ennemi[(i+j)%10][2],tab_ennemi[(i+j)%10].y+6*tab_chute_ennemi[(i+j)%10][2],tab_ennemi[(i+j)%10].z+6*tab_chute_ennemi[(i+j)%10][2]))/2 >
+	 distance_point(tab_ennemi[i],tab_ennemi[(i+j)%10])+10){
 	tab_chute_ennemi[i][0]=1;
 	tab_chute_ennemi[(i+j)%10][0]=1;
       }
+    }
+    /* Collision avec nous, On decale de 10*V90 ou on traverse*/
+    if(distance_point(init_float3(tab_ennemi[i].x-6*tab_chute_ennemi[i][2],tab_ennemi[i].y-6*tab_chute_ennemi[i][2],tab_ennemi[i].z-6*tab_chute_ennemi[i][2]),init_float3(tab_ennemi[i].x+6*tab_chute_ennemi[i][2],tab_ennemi[i].y+6*tab_chute_ennemi[i][2],tab_ennemi[i].z+6*tab_chute_ennemi[i][2]))/2 >
+       distance_point(tab_ennemi[i],V_POS)){
+      tab_chute_ennemi[i][0]=1;
+      V_POS.x-=30*V_DIR.x;
+      V_POS.y-=30*V_DIR.y;
+      V_POS.z-=30*V_DIR.z;
     }
   }
 }
@@ -160,7 +174,7 @@ void start_anim(){
     first_pass = 0;
   }
       start_ajout_x+=((float)LARGEUR_MAP/(float)LONGUEUR_MAP)*5;
-    start_ajout_y+=((float)LONGUEUR_MAP/(float)LARGEUR_MAP)*5;
+      start_ajout_y+=((float)LONGUEUR_MAP/(float)LARGEUR_MAP)*5;
     }
   }
   else{
@@ -178,6 +192,7 @@ void start_anim(){
 
 void mur_ennemi(){
   int i;
+  /* mur apparition */
   glBegin(GL_LINES);
   if (start==2){
     glColor4f(0,1,1,1);
@@ -190,7 +205,22 @@ void mur_ennemi(){
     barre_mur++;
     barre_mur= barre_mur%300;
 
-  glEnd();
+
+  
+    glEnd();
+    
+    glColor4f(0.1,0.1,0.2,0.5);
+    glBegin(GL_QUADS);
+    glVertex3f(0,LONGUEUR_MAP,0);
+    glVertex3f(LARGEUR_MAP,LONGUEUR_MAP,0);
+      
+    glVertex3f(LARGEUR_MAP,LONGUEUR_MAP,300);
+    glVertex3f(0,LONGUEUR_MAP,300);
+
+    glEnd();
+  
+
+    /* mur disparition */
   }
 
 
@@ -338,7 +368,7 @@ void dessin_grille(){
   //Animation nuages
   p=rand()%100;
   if ( p < 85)
-  nuages +=3;
+    nuages +=3;
   if (nuages>bS_Long) nuages=0;
 
   if (!nuages_toggle)
@@ -409,9 +439,9 @@ void projectile(float3 direction, float3 f){
 void gestion_input(){
   if (key_s == 1) {
     /*
-    V_POS.z-=V_DIR.z;
-    V_POS.x-=V_DIR.x;
-    V_POS.y-=V_DIR.y;
+      V_POS.z-=V_DIR.z;
+      V_POS.x-=V_DIR.x;
+      V_POS.y-=V_DIR.y;
     */
     S_VIT--;
     if (COL_DET == 0) {
@@ -430,9 +460,9 @@ void gestion_input(){
     // MAJ DU CUBE
 
     /*
-    V_POS.x+=V_DIR.x;
-    V_POS.z+=V_DIR.z;
-    V_POS.y+=V_DIR.y;
+      V_POS.x+=V_DIR.x;
+      V_POS.z+=V_DIR.z;
+      V_POS.y+=V_DIR.y;
     */
     S_VIT++;
     if (COL_DET == 1 )
@@ -443,7 +473,7 @@ void gestion_input(){
   }
     
   if (key_q == 1){
-      /* FORMULE DE RODRIGUES */
+    /* FORMULE DE RODRIGUES */
     /* Rotation autour de l'axe DIR du VECTEUR_90*/
     V_90=rodrigues(-1.2,V_90,V_DIR);
     /* On reactualise le V_UP */
@@ -581,9 +611,9 @@ Frustum en 1920 x 1080 ??
 	
 	if(intersection_proj_ennemi(tab_proj[i])==1){
 	  tab_proj[i][0].x=-5000;
-	fprintf(stderr,"JINTERSEQUTE\n");
+	  fprintf(stderr,"JINTERSEQUTE\n");
 	}
-	  else{
+	else{
 	  tab_proj[i][1].x+=5*tab_proj[i][0].x;
 	  tab_proj[i][1].y+=5*tab_proj[i][0].y;
 	  tab_proj[i][1].z+=5*tab_proj[i][0].z;
@@ -594,7 +624,7 @@ Frustum en 1920 x 1080 ??
 
 	  affiche_cube_plein(tab_proj[i][1],tab_proj[i][2],1);
 	  tab_proj[i][0].z-=0.01;
-	  	}
+	}
       }
     }
   }
@@ -603,7 +633,7 @@ Frustum en 1920 x 1080 ??
   for( i=0; i<10; i++){
     /* Methode patarasse */
     if(tab_ennemi[i].y!=-1){
-      if (tab_ennemi[i].y>=LONGUEUR_MAP || tab_ennemi[i].z<0){
+      if (tab_ennemi[i].y>=LONGUEUR_MAP+100 || tab_ennemi[i].z<0){
 	tab_ennemi[i].y=-1;
       }
       else{
@@ -618,7 +648,7 @@ Frustum en 1920 x 1080 ??
 
 	}
 	
-	  affiche_cube_plein(init_float3(tab_ennemi[i].x-10,tab_ennemi[i].y-10,tab_ennemi[i].z-10),init_float3(tab_ennemi[i].x+10,tab_ennemi[i].y+10,tab_ennemi[i].z+10),1);
+	affiche_cube_plein(init_float3(tab_ennemi[i].x-6*tab_chute_ennemi[i][2],tab_ennemi[i].y-6*tab_chute_ennemi[i][2],tab_ennemi[i].z-6*tab_chute_ennemi[i][2]),init_float3(tab_ennemi[i].x+6*tab_chute_ennemi[i][2],tab_ennemi[i].y+6*tab_chute_ennemi[i][2],tab_ennemi[i].z+6*tab_chute_ennemi[i][2]),1);
 	glPopMatrix();
       }
     }
@@ -631,19 +661,19 @@ Frustum en 1920 x 1080 ??
     glVertex3f( 100,0,0);*/
 
   /*
-  glColor4f(1,0,0.5,0.5);
+    glColor4f(1,0,0.5,0.5);
   
-  glVertex3f( 0,0,0);
-  glVertex3f(V_90.x*100,V_90.y*100,V_90.z*100);
+    glVertex3f( 0,0,0);
+    glVertex3f(V_90.x*100,V_90.y*100,V_90.z*100);
   
-  glColor4f(0,1,1,0.5);
-  glVertex3f( 0,0,0);
-  glVertex3f( V_UP.x*100, V_UP.y*100, V_UP.z*100);
+    glColor4f(0,1,1,0.5);
+    glVertex3f( 0,0,0);
+    glVertex3f( V_UP.x*100, V_UP.y*100, V_UP.z*100);
   
   
-  glColor4f(1,1,0,0.5);
-  glVertex3f( 0,0,0);
-  glVertex3f( V_DIR.x*100, V_DIR.y*100, V_DIR.z*100);
+    glColor4f(1,1,0,0.5);
+    glVertex3f( 0,0,0);
+    glVertex3f( V_DIR.x*100, V_DIR.y*100, V_DIR.z*100);
   */
 
 
@@ -660,6 +690,7 @@ Frustum en 1920 x 1080 ??
 	}
 	}*/
   V_POS = f3_add_f3(V_POS,mul_float3(V_DIR,S_VIT));
+
     }
 
   /* Gestion des collisions + gravité joueur */
@@ -731,7 +762,7 @@ Frustum en 1920 x 1080 ??
 
   /* on pourra faire fonction generale avec le .z > type */
 
-  affiche_karbre_clipping(karbre8,V_POS,V_DIR,V_UP);
+  affiche_karbre_clipping(karbre8,V_POS,V_DIR,V_UP,V_90);
   
   //dessin_arbre();
   dessin_lait();
@@ -961,7 +992,7 @@ int main(int argc, char**argv){
   V_UP = init_float3(0,0,1);
 
   // V_90_INIT = V_90;
- V_UP_INIT = V_UP;
+  V_UP_INIT = V_UP;
   
   // Initialisation décors
   
@@ -981,14 +1012,14 @@ int main(int argc, char**argv){
 
   /*
   
-  fprintf(stderr,"TEEEEEEEEEEEEEEEST\n");
-  for ( i = 0 ; i < 1000 ;i++ )
+    fprintf(stderr,"TEEEEEEEEEEEEEEEST\n");
+    for ( i = 0 ; i < 1000 ;i++ )
     tab_decors[i][150] = -50;
   */
   fprintf(stderr,"TEEEEEEEEEEEEEEEST2\n");
   
   for ( i =0 ; i<50 ; i++)
-  mountain(rand()%LARGEUR_MAP,rand()%LONGUEUR_MAP,rand()%150+30);
+    mountain(rand()%LARGEUR_MAP,rand()%LONGUEUR_MAP,rand()%150+30);
   
   for (  i = 0 ; i < 28; i++)   aplanir();
 
@@ -1002,7 +1033,7 @@ int main(int argc, char**argv){
   for (i=0; i<10; i++){
     tab_ennemi[i]=init_float3(-5000,-1,-5000);
     tab_chute_ennemi[10][0]=0;
-tab_chute_ennemi[10][1]=0;
+    tab_chute_ennemi[10][1]=0;
   }
   /*
 
@@ -1028,6 +1059,19 @@ tab_chute_ennemi[10][1]=0;
   glEnable( GL_BLEND );
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
   glEnable(GL_DEPTH_TEST);
+
+  
+  /*
+            glEnable(GL_FOG) ;
+            GLfloat fogcolor[4] = {0.1,0.1,0.2,0.2} ;
+            GLint fogmode = GL_EXP ;
+            glFogi (GL_FOG_MODE, fogmode) ;
+            glFogfv(GL_FOG_COLOR, fogcolor) ;
+            glFogf(GL_FOG_DENSITY, 0.005) ;
+            glFogf(GL_FOG_START, 29.0) ;
+            glFogf(GL_FOG_END, 3.0) ;
+  */
+
   //glutMouseFunc glutKeyboardFunc
   
   glutKeyboardFunc(keyPressed);

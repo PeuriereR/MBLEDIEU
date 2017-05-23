@@ -10,6 +10,59 @@ int dans_cube(float3 p,float3 m1,float3 m2){
 }
 
 
+int intersection_arbre_vaisseau(float3 pt_vaisseau,elem_coord arbre, float3 v_dir, float3 v_up, float3 v_90){
+  float3 m1_quadri_intersec_arbre;
+  float3 m2_quadri_intersec_arbre;
+  
+  if (arbre.type==1){
+    m1_quadri_intersec_arbre=init_float3(
+					 arbre.coord.x-2-3*arbre.scale,
+					 arbre.coord.y-2-3*arbre.scale,
+					 arbre.coord.z
+					 );
+
+    m2_quadri_intersec_arbre=init_float3(
+					 arbre.coord.x+2+3*arbre.scale,
+					 arbre.coord.y+2+3*arbre.scale,
+					 arbre.coord.z+12+12*arbre.scale
+					 );
+  }
+  if (arbre.type==2){
+    m1_quadri_intersec_arbre=init_float3(
+					 arbre.coord.x-1-1*arbre.scale,
+					 arbre.coord.y-1-1*arbre.scale,
+					 arbre.coord.z-5
+					 );
+    m2_quadri_intersec_arbre=init_float3(
+					 arbre.coord.x+1+1*arbre.scale,
+					 arbre.coord.y+1+1*arbre.scale,
+					 arbre.coord.z+3+3*arbre.scale
+					 );
+  }
+  
+  
+  if (dans_cube(pt_vaisseau,m1_quadri_intersec_arbre,m2_quadri_intersec_arbre)
+      || dans_cube(init_float3(pt_vaisseau.x+10*v_dir.x,
+			       pt_vaisseau.y+10*v_dir.y,
+			       pt_vaisseau.z+10*v_dir.z),m1_quadri_intersec_arbre,m2_quadri_intersec_arbre)
+      || dans_cube(init_float3(pt_vaisseau.x+10*v_90.x,
+			       pt_vaisseau.y+10*v_90.y,
+			       pt_vaisseau.z+10*v_90.z),m1_quadri_intersec_arbre,m2_quadri_intersec_arbre)
+      
+      || dans_cube(init_float3(pt_vaisseau.x-10*v_90.x,
+			       pt_vaisseau.y-10*v_90.y,
+			       pt_vaisseau.z-10*v_90.z),m1_quadri_intersec_arbre,m2_quadri_intersec_arbre)
+      
+      || dans_cube(init_float3(pt_vaisseau.x+10*v_up.x,
+			       pt_vaisseau.y+10*v_up.y,
+			       pt_vaisseau.z+10*v_up.z),m1_quadri_intersec_arbre,m2_quadri_intersec_arbre)
+
+      )
+    return 1; // collision
+  return 0;
+}
+
+
 int cube_intersection_tab(float3* tab_coord,int taille_coord,float** tab_decors,float3 m1,float3 m2){
   /*******************************************************************
 
@@ -206,9 +259,9 @@ void affiche_karbre_simple(karbre k){
 
 
 
-void affiche_karbre_clipping2(karbre k,float3 m1, float3 m2, float3 vdir, float3 point_clipping, float3 pt_actuel){
-  //  affiche_cube(m1,m2);
-//0 vide, 1 plein, -1 init -2 noeud interne
+void affiche_karbre_clipping2(karbre k,float3 m1, float3 m2, float3 vdir,float3 vup,float3 v90, float3 point_clipping, float3 pt_eye, float3 pt_vaisseau){
+  //affiche_cube(m1,m2);
+  //0 vide, 1 plein, -1 init -2 noeud interne
   if(k->vide==1){
     float3 v_cube=init_float3(k->elem.coord.x-point_clipping.x,k->elem.coord.y-point_clipping.y,k->elem.coord.z-point_clipping.z);
     //angle en radians
@@ -243,12 +296,26 @@ void affiche_karbre_clipping2(karbre k,float3 m1, float3 m2, float3 vdir, float3
 	/* clipping derriere */
 	&& produit_scalaire(vdir,v_cube)>=0
 	){
+      //affiche_cube(m1,m2);
       /* on peut verifier k->elem.type si on n'a pas que des arbres */
+      if(intersection_arbre_vaisseau(pt_vaisseau,k->elem,vdir,vup,v90)){
+	if( k->elem.type==1)
+	  k->elem.type=2;
+	if (k->elem.type==2)
+	  INTERS_TRONC=1;
+      }
       if(k->elem.type==1){
 	glPushMatrix();
 	glTranslatef(k->elem.coord.x,k->elem.coord.y,k->elem.coord.z);
 	glScalef(1+k->elem.scale,1+k->elem.scale,1+k->elem.scale);
 	dessin_arbre2();
+	glPopMatrix();
+      }
+      if(k->elem.type==2){
+	glPushMatrix();
+	glTranslatef(k->elem.coord.x,k->elem.coord.y,k->elem.coord.z);
+	glScalef(1+k->elem.scale,1+k->elem.scale,1+k->elem.scale);
+	dessin_tronc();
 	glPopMatrix();
       }
     }
@@ -304,59 +371,51 @@ void affiche_karbre_clipping2(karbre k,float3 m1, float3 m2, float3 vdir, float3
 
 
     /* On stoppe la propagation inutile en verifiant que le scalaire m1.point actuel et m2.point actuel) < 0 ET qu'on ne se trouve pas dans ce cube) */
-    /* C'est certain ca ???????????????????????????????????????????????????????????????
+    
+    if (produit_scalaire(init_float3(m1.x-pt_eye.x,m1.y-pt_eye.y,m1.z-pt_eye.z),vdir)>=0
+	|| produit_scalaire(init_float3(m2_1.x-pt_eye.x,m2_1.y-pt_eye.y,m2_1.z-pt_eye.z),vdir)>=0
+	|| dans_cube(pt_eye,m1,m2_1)==1)
+      affiche_karbre_clipping2(k->fils[0],m1, m2_1,vdir, vup, v90, point_clipping,pt_eye,pt_vaisseau);
 
-?????????????????
+    if (produit_scalaire(init_float3(m1_2.x-pt_eye.x,m1_2.y-pt_eye.y,m1_2.z-pt_eye.z),vdir)>=0
+	|| produit_scalaire(init_float3(m2_2.x-pt_eye.x,m2_2.y-pt_eye.y,m2_2.z-pt_eye.z),vdir)>=0
+	|| dans_cube(pt_eye,m1_2,m2_2)==1)
+      affiche_karbre_clipping2(k->fils[1],m1_2,m2_2,vdir, vup, v90, point_clipping,pt_eye,pt_vaisseau);
 
-????????????????
+    if (produit_scalaire(init_float3(m1_3.x-pt_eye.x,m1_3.y-pt_eye.y,m1_3.z-pt_eye.z),vdir)>=0
+	|| produit_scalaire(init_float3(m2_3.x-pt_eye.x,m2_3.y-pt_eye.y,m2_3.z-pt_eye.z),vdir)>=0
+	|| dans_cube(pt_eye,m1_3,m2_3)==1)
+      affiche_karbre_clipping2(k->fils[2],m1_3,m2_3,vdir, vup, v90, point_clipping,pt_eye,pt_vaisseau);
 
+    if (produit_scalaire(init_float3(m1_4.x-pt_eye.x,m1_4.y-pt_eye.y,m1_4.z-pt_eye.z),vdir)>=0
+	|| produit_scalaire(init_float3(m2_4.x-pt_eye.x,m2_4.y-pt_eye.y,m2_4.z-pt_eye.z),vdir)>=0
+	|| dans_cube(pt_eye,m1_4,m2_4)==1)
+      affiche_karbre_clipping2(k->fils[3],m1_4,m2_4,vdir, vup, v90, point_clipping,pt_eye,pt_vaisseau);
 
-    */
+    if (produit_scalaire(init_float3(m1_8.x-pt_eye.x,m1_8.y-pt_eye.y,m1_8.z-pt_eye.z),vdir)>=0
+	|| produit_scalaire(init_float3(m2_8.x-pt_eye.x,m2_8.y-pt_eye.y,m2_8.z-pt_eye.z),vdir)>=0
+	|| dans_cube(pt_eye,m1_8,m2_8)==1)
+      affiche_karbre_clipping2(k->fils[4],m1_8,m2_8,vdir, vup, v90, point_clipping,pt_eye,pt_vaisseau);
 
-    if (produit_scalaire(init_float3(m1.x-pt_actuel.x,m1.y-pt_actuel.y,m1.z-pt_actuel.z),vdir)>=0
-	|| produit_scalaire(init_float3(m2_1.x-pt_actuel.x,m2_1.y-pt_actuel.y,m2_1.z-pt_actuel.z),vdir)>=0
-	|| dans_cube(pt_actuel,m1,m2_1)==1)
-      affiche_karbre_clipping2(k->fils[0],m1, m2_1,vdir,point_clipping,pt_actuel);
+    if (produit_scalaire(init_float3(m1_7.x-pt_eye.x,m1_7.y-pt_eye.y,m1_7.z-pt_eye.z),vdir)>=0
+	|| produit_scalaire(init_float3(m2.x-pt_eye.x,m2.y-pt_eye.y,m2.z-pt_eye.z),vdir)>=0
+	|| dans_cube(pt_eye,m1_7,m2)==1)
+      affiche_karbre_clipping2(k->fils[5],m1_7,m2,vdir, vup, v90, point_clipping,pt_eye,pt_vaisseau);
 
-    if (produit_scalaire(init_float3(m1_2.x-pt_actuel.x,m1_2.y-pt_actuel.y,m1_2.z-pt_actuel.z),vdir)>=0
-	|| produit_scalaire(init_float3(m2_2.x-pt_actuel.x,m2_2.y-pt_actuel.y,m2_2.z-pt_actuel.z),vdir)>=0
-	|| dans_cube(pt_actuel,m1_2,m2_2)==1)
-      affiche_karbre_clipping2(k->fils[1],m1_2,m2_2,vdir,point_clipping,pt_actuel);
+    if (produit_scalaire(init_float3(m1_6.x-pt_eye.x,m1_6.y-pt_eye.y,m1_6.z-pt_eye.z),vdir)>=0
+	|| produit_scalaire(init_float3(m2_6.x-pt_eye.x,m2_6.y-pt_eye.y,m2_6.z-pt_eye.z),vdir)>=0
+	|| dans_cube(pt_eye,m1_6,m2_6)==1)
+      affiche_karbre_clipping2(k->fils[6],m1_6,m2_6,vdir, vup, v90, point_clipping,pt_eye,pt_vaisseau);
 
-    if (produit_scalaire(init_float3(m1_3.x-pt_actuel.x,m1_3.y-pt_actuel.y,m1_3.z-pt_actuel.z),vdir)>=0
-	|| produit_scalaire(init_float3(m2_3.x-pt_actuel.x,m2_3.y-pt_actuel.y,m2_3.z-pt_actuel.z),vdir)>=0
-	|| dans_cube(pt_actuel,m1_3,m2_3)==1)
-      affiche_karbre_clipping2(k->fils[2],m1_3,m2_3,vdir,point_clipping,pt_actuel);
-
-    if (produit_scalaire(init_float3(m1_4.x-pt_actuel.x,m1_4.y-pt_actuel.y,m1_4.z-pt_actuel.z),vdir)>=0
-	|| produit_scalaire(init_float3(m2_4.x-pt_actuel.x,m2_4.y-pt_actuel.y,m2_4.z-pt_actuel.z),vdir)>=0
-	|| dans_cube(pt_actuel,m1_4,m2_4)==1)
-      affiche_karbre_clipping2(k->fils[3],m1_4,m2_4,vdir,point_clipping,pt_actuel);
-
-    if (produit_scalaire(init_float3(m1_8.x-pt_actuel.x,m1_8.y-pt_actuel.y,m1_8.z-pt_actuel.z),vdir)>=0
-	|| produit_scalaire(init_float3(m2_8.x-pt_actuel.x,m2_8.y-pt_actuel.y,m2_8.z-pt_actuel.z),vdir)>=0
-	|| dans_cube(pt_actuel,m1_8,m2_8)==1)
-      affiche_karbre_clipping2(k->fils[4],m1_8,m2_8,vdir,point_clipping,pt_actuel);
-
-    if (produit_scalaire(init_float3(m1_7.x-pt_actuel.x,m1_7.y-pt_actuel.y,m1_7.z-pt_actuel.z),vdir)>=0
-	|| produit_scalaire(init_float3(m2.x-pt_actuel.x,m2.y-pt_actuel.y,m2.z-pt_actuel.z),vdir)>=0
-	|| dans_cube(pt_actuel,m1_7,m2)==1)
-      affiche_karbre_clipping2(k->fils[5],m1_7,m2,vdir,point_clipping,pt_actuel);
-
-    if (produit_scalaire(init_float3(m1_6.x-pt_actuel.x,m1_6.y-pt_actuel.y,m1_6.z-pt_actuel.z),vdir)>=0
-	|| produit_scalaire(init_float3(m2_6.x-pt_actuel.x,m2_6.y-pt_actuel.y,m2_6.z-pt_actuel.z),vdir)>=0
-	|| dans_cube(pt_actuel,m1_6,m2_6)==1)
-      affiche_karbre_clipping2(k->fils[6],m1_6,m2_6,vdir,point_clipping,pt_actuel);
-
-    if (produit_scalaire(init_float3(m1_5.x-pt_actuel.x,m1_5.y-pt_actuel.y,m1_5.z-pt_actuel.z),vdir)>=0
-	|| produit_scalaire(init_float3(m2_5.x-pt_actuel.x,m2_5.y-pt_actuel.y,m2_5.z-pt_actuel.z),vdir)>=0
-	|| dans_cube(pt_actuel,m1_5,m2_5)==1)
-      affiche_karbre_clipping2(k->fils[7],m1_5,m2_5,vdir,point_clipping,pt_actuel);
+    if (produit_scalaire(init_float3(m1_5.x-pt_eye.x,m1_5.y-pt_eye.y,m1_5.z-pt_eye.z),vdir)>=0
+	|| produit_scalaire(init_float3(m2_5.x-pt_eye.x,m2_5.y-pt_eye.y,m2_5.z-pt_eye.z),vdir)>=0
+	|| dans_cube(pt_eye,m1_5,m2_5)==1)
+      affiche_karbre_clipping2(k->fils[7],m1_5,m2_5,vdir, vup, v90, point_clipping,pt_eye,pt_vaisseau);
   }
 }
 
 
-void affiche_karbre_clipping(karbre k,float3 centre, float3 vdir,float3 vup){
+void affiche_karbre_clipping(karbre k,float3 centre, float3 vdir,float3 vup, float3 v90){
   if (k==NULL){
     fprintf(stderr,"K NUL\n");
     return;
@@ -365,14 +424,13 @@ void affiche_karbre_clipping(karbre k,float3 centre, float3 vdir,float3 vup){
   float3 point_clipping = init_float3(centre.x-150*vdir.x +  vup.x*8 ,
 			 centre.y-150*vdir.y +  vup.y*8 ,
 			 centre.z-150*vdir.z +  vup.z*8);
-  float3 p_actuel = init_float3(centre.x-30*vdir.x +  vup.x*8 ,
+  float3 p_eye = init_float3(centre.x-30*vdir.x +  vup.x*8 ,
 			 centre.y-30*vdir.y +  vup.y*8 ,
 			 centre.z-30*vdir.z +  vup.z*8);
-   
    
   float3 m1=init_float3(0,0,0);
   float3 m2=init_float3(pow(2,N),pow(2,N),pow(2,N));
 
-  affiche_karbre_clipping2(k, m1, m2,vdir,point_clipping,p_actuel);
+  affiche_karbre_clipping2(k, m1, m2,vdir, vup, v90, point_clipping,p_eye,centre);
 
 }

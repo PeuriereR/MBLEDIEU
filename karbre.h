@@ -13,6 +13,9 @@
 #define N 10
 #define K 8
 #define ARBRE 1
+#define TRONC 2
+
+int INTERS_TRONC;
 
 typedef int element;
 typedef struct{
