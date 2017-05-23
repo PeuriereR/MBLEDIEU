@@ -598,12 +598,12 @@ void gestion_input(){
     }
   
     if (key_droite == 1) {      
-      V_DIR_P=rodrigues(-0.8,V_DIR_P,V_UP_P);
+      V_DIR_P=rodrigues(-0.8,V_DIR_P,V_UP_INIT);
       V_90_P=produit_vectoriel(V_UP_P,V_DIR_P);      
     }
   
     if (key_gauche == 1) {
-      V_DIR_P=rodrigues(0.8,V_DIR_P,V_UP_P);
+      V_DIR_P=rodrigues(0.8,V_DIR_P,V_UP_INIT);
       V_90_P=produit_vectoriel(V_UP_P,V_DIR_P);      
     }
 
@@ -908,7 +908,8 @@ Frustum en 1920 x 1080 ??
 
   /* on pourra faire fonction generale avec le .z > type */
 
-  affiche_karbre_clipping(karbre8,V_POS,V_DIR,V_UP,V_90);
+  //  affiche_karbre_clipping(karbre8,V_POS,V_DIR,V_UP,V_90);
+    affiche_karbre_clipping(karbre8,V_POS_P,V_DIR_P,V_UP_P,V_90_P);
   
   //dessin_arbre();
   dessin_lait();
@@ -930,10 +931,9 @@ Frustum en 1920 x 1080 ??
   dessin_grille();
 
 
-  //REMETRE LE IF !!!!!! 
   
   /* Dessin de l'interface */ 
-  //  if (start!=0) {
+   if (start!=0) {
     
   /* Dessin jauge de vie */
   dessin_jauge(5,5,130,50,vie,BLEU,GRIS,ROUGE);
@@ -944,7 +944,7 @@ Frustum en 1920 x 1080 ??
   /* Affichage du score */
   dessin_score(620,750,160,50,score,BLANC,NOIR,BLEU);
 
-  //}
+  }
   glutSwapBuffers();
 
 }
