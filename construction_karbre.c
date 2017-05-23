@@ -64,20 +64,12 @@ int intersection_arbre_vaisseau(float3 pt_vaisseau,elem_coord arbre, float3 v_di
 
 
 int cube_intersection_tab(float3* tab_coord,int taille_coord,float** tab_decors,float3 m1,float3 m2){
-  /*******************************************************************
-
-TAILLE DE TABLEAUUUUUUUUUUUUUUUUU EN PARAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM
-
-
-  *****************************************************************************/
   
   int i;
   float3 coord;
   int nb_elem=0;
   int indice;
   int e;
-  /* cette boucle est horrible */
-  /* TAILLE DU TABLEAU TAB COORD */
   for(i=0; i<taille_coord; i++){
     coord=init_float3(tab_coord[i].x,tab_coord[i].y,tab_decors[(int)tab_coord[i].x][(int)tab_coord[i].y]);
     e=dans_cube(coord,m1,m2);
@@ -112,9 +104,6 @@ karbre cons_arbre2(float3* tab_coord,float* tab_scale,int taille_coord,float** t
     ktmp->elem.coord.z=tab_decors[(int)tab_coord[nb_elem_dans_cube].x][(int)tab_coord[nb_elem_dans_cube].y];
     ktmp->elem.type=tab_coord[nb_elem_dans_cube].z;
     ktmp->elem.scale=tab_scale[nb_elem_dans_cube];
-    //=get_elem_dans_cube(tab_coord,tab_decors,m1,m2);
-    // NOUVELLE FONCTION elem_dans_cube(tab_coord,tab_decors,m1,m2);
-    // METTRE ELEMENT ICI
     return ktmp;
   }
   if (n==0){
@@ -179,12 +168,6 @@ karbre cons_arbre2(float3* tab_coord,float* tab_scale,int taille_coord,float** t
 
 
 karbre cons_arbre(float3* tab_coord,float* tab_scale,int taille_coord,float** tab_decors){
-  // x y z > centre boule - rayon r
-  /*
-    for(int i=0; i<500; i++){
-    printf("tab %f\n",tab_coord[i].x);
-
-    }*/
   int n=N;
   float3 m1,m2;
   m1=init_float3(0,0,0);
@@ -252,9 +235,9 @@ void affiche_karbre_simple(karbre k){
     return;
   }
     
-  //float3 m1=init_float3(0,0,0);
-  // float3 m2=init_float3(pow(2,N),pow(2,N),pow(2,N));
-  //affiche_karbre_simple2(k, m1, m2);
+  float3 m1=init_float3(0,0,0);
+  float3 m2=init_float3(pow(2,N),pow(2,N),pow(2,N));
+  affiche_karbre_simple2(k, m1, m2);
 }
 
 
