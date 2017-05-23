@@ -3,10 +3,10 @@ GLUT=-lglut -lGLU -lGL -lm
 CC = gcc
 all: proj
 
-proj: main.o karbre.o float3.o draw.o construction_karbre.o
-	$(CC) $(OPTIONS) main.o karbre.o float3.o draw.o construction_karbre.o -o proj $(GLUT)
+proj: main.o karbre.o float3.o draw.o construction_karbre.o util.o
+	$(CC) $(OPTIONS) main.o karbre.o float3.o draw.o construction_karbre.o util.o -o proj $(GLUT)
 
-main.o: main.c karbre.h
+main.o: main.c karbre.h util.h
 	$(CC) $(OPTIONS) -c main.c $(GLUT)
 
 karbre.o: karbre.c karbre.h
@@ -15,11 +15,14 @@ karbre.o: karbre.c karbre.h
 float3.o: float3.c float3.h
 	$(CC) $(OPTIONS) -c float3.c $(GLUT)
 
-draw.o: draw.c draw.h
+draw.o: draw.c draw.h util.h
 	$(CC) $(OPTIONS) -c draw.c $(GLUT)
 
 construction_karbre.o: construction_karbre.c construction_karbre.h
 	$(CC) $(OPTIONS) -c construction_karbre.c $(GLUT)
+
+util.o: util.c util.h
+	$(CC) $(OPTIONS) -c util.c $(GLUT)
 
 clean:
 	rm -rf *.o proj

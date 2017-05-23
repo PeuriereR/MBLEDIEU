@@ -1,4 +1,5 @@
 #include "draw.h"
+#include "util.h"
 
 void dessin_jauge( float coord_x, float coord_y,float largeur, float hauteur, float valeur, int couleur_FG, int couleur_BG, int couleur_vide){
 
@@ -32,9 +33,24 @@ void dessin_jauge( float coord_x, float coord_y,float largeur, float hauteur, fl
 
   glEnd();
   
-    glEnable(GL_DEPTH_TEST);  /* bad trip simulator si on commente cette ligne !*/
+  glEnable(GL_DEPTH_TEST);  /* bad trip simulator si on commente cette ligne !*/
 
 }
+void dessin_munitions( float coord_x, float coord_y,float largeur, float hauteur, float valeur,float val_max,  int couleur_FG, int couleur_BG){
+  int i;
+  int pas=11 ;
+
+  int bot_row=min(val_max/2,valeur);
+  int top_row=valeur-bot_row;
+  for ( i = 0 ; i < bot_row ; i++ ) {
+  dessin_jauge( coord_x + i * pas,  coord_y, 10, 20, 100,  couleur_FG, couleur_BG, couleur_BG);
+  }
+  
+  for ( i = 0 ; i < top_row ; i++ ) {
+  dessin_jauge( coord_x + i * pas,  coord_y+25, 10, 20, 100,  couleur_FG, couleur_BG, couleur_BG);
+  }
+}
+
 
 void affiche_cube_plein(float3 p1, float3 p2, float opacity){
   
@@ -365,11 +381,7 @@ void couleur(int c){
     glColor3f(0.2, 0.2, 0.9);
   if (c==ROUGE)
     glColor3f(1,0,0);
+  if (c==NOIR)
+    glColor3f(0,0,0);
 }
 
-
-float clamp_min_max_f(float n, float min, float max){
-  if (n<min) return min;
-  if (n>=max) return max;
-  return n;
-}

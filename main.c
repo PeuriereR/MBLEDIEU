@@ -2,18 +2,22 @@
 #include "float3.h"
 #include "draw.h"
 #include "construction_karbre.h"
+#include "util.h"
 
 #define LARGEUR_MAP 750 // X <==> i 
 #define LONGUEUR_MAP 750 // Y <==> j
 
-#define VIT_MAX 20
+#define VIT_MAX 5
+#define VIT_MIN 1
+#define MUN_MAX 50
+#define VIE_MAX 100
 int barre_mur=1;
 
 /* Variables start truc jaune */
 float start_ajout_x;
 float start_ajout_y;
 int start=0;
-
+int first_pass=1;
 float3 tab_ennemi[10];
 int tab_chute_ennemi[10][3];
 
@@ -23,7 +27,8 @@ int r_1,r_2,r_3;
   int seuil;
 // Variables detection collision
 float r_sphere_joueur;
-
+int COL_DET;
+int ARR;
 // Variables décors
 int nuages;
 
@@ -49,12 +54,22 @@ int key_q, key_d, key_s, key_z, key_m, key_p;//,key_haut,key_bas,key_droite,key_
 int key_haut,key_bas,key_droite,key_gauche;
 //int key_haut,key_gauche;
 //int abc=0;
-/* V_POS: position du joueur */
+
+int dans_vaisseau=1;
+int a_portee_vaisseau=1;
+/* V_POS: position du joueur-vaisseau */
 float3 V_POS;
-/* S_VIT : vitesse du joueur */
+/* S_VIT : vitesse du joueur-vaisseau */
 float S_VIT;
 
+
+/* V_POS: position du joueur-a pied */
+float3 V_POS_P;
+/* S_VIT : vitesse du joueur-a pied */
+float S_VIT_P;
+
 float vie;
+int mun;
 float3 p2;
 float3 p1_hyperC,p2_hyperC;
 float3 p1_hyperC2,p2_hyperC2;
@@ -112,6 +127,7 @@ void intersection_ennemi_ennemi(){
   }
 }
 void start_anim(){
+  
   if (start_ajout_x<=LARGEUR_MAP/2){
 
     glBegin(GL_QUADS);
@@ -137,6 +153,12 @@ void start_anim(){
 
     glEnd();
     if (start==1){
+      
+  if (first_pass){
+    vie= VIE_MAX;
+    mun = MUN_MAX;
+    first_pass = 0;
+  }
       start_ajout_x+=((float)LARGEUR_MAP/(float)LONGUEUR_MAP)*5;
     start_ajout_y+=((float)LONGUEUR_MAP/(float)LARGEUR_MAP)*5;
     }
@@ -148,6 +170,7 @@ void start_anim(){
     ennemis(init_float3(rand()%LARGEUR_MAP,0,150+rand()%150));
     //active collision
     //active le jeu
+
 
   }
 }
@@ -391,8 +414,16 @@ void gestion_input(){
     V_POS.y-=V_DIR.y;
     */
     S_VIT--;
-    if (S_VIT < 0 )
-      S_VIT = 0;
+    if (COL_DET == 0) {
+      if (S_VIT < VIT_MIN ) {
+	S_VIT = VIT_MIN;
+      }
+    }
+    else {
+      if (S_VIT < 0 ) {
+	S_VIT = 0;
+      }
+    }
   }
   if (key_z == 1){
  
@@ -404,6 +435,8 @@ void gestion_input(){
     V_POS.y+=V_DIR.y;
     */
     S_VIT++;
+    if (COL_DET == 1 )
+      S_VIT -= .5;
     if (abs(S_VIT)>VIT_MAX)
       S_VIT=VIT_MAX;
 
@@ -412,14 +445,14 @@ void gestion_input(){
   if (key_q == 1){
       /* FORMULE DE RODRIGUES */
     /* Rotation autour de l'axe DIR du VECTEUR_90*/
-    V_90=rodrigues(-.8,V_90,V_DIR);
+    V_90=rodrigues(-1.2,V_90,V_DIR);
     /* On reactualise le V_UP */
     V_UP=produit_vectoriel(V_DIR,V_90);
  
   }
   if (key_d == 1){
     /* Rotation autour de l'axe DIR du VECTEUR_90*/
-    V_90=rodrigues(.8,V_90,V_DIR);
+    V_90=rodrigues(1.2,V_90,V_DIR);
     /* On reactualise le V_UP */
     V_UP=produit_vectoriel(V_DIR,V_90);
   }
@@ -456,6 +489,7 @@ void affichage_pt(float3 p1){
 void affichage(){
   int i;
   int val = 0;
+
   /*
     angle_tangage=angle_tangage+0.2;
     if (abs(angle_tangage)>=360)
@@ -484,14 +518,47 @@ void affichage(){
   glMatrixMode(GL_MODELVIEW);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glLoadIdentity();
+
+  /*
+
+_________________________
+|                        |
+|                        |
+|                        |               -10
+|                        |                ^
+|                        |                "
+|                        |                "
+|           X            |     -10   <=========>  10   Frustum en mode 800 x 800
+|                        |                "
+|                        |                "
+|                        |                v
+|                        |               10
+|________________________|
+
+
+Frustum en 1920 x 1080 ?? 
+
+800 --> 20     |   800 --> 20
+1920 --> 48    |   1080 --> 27
+
+
+   */
+
   
-  glFrustum(-10,10,-10,10,10,10000);
+  glFrustum(-24,24,-13,13,20,1000);
   //gluPerspective(100,1,0.1,1000);
 
   
   V_EYE.x=V_POS.x-30*V_DIR.x +  V_UP.x*8;
   V_EYE.y=V_POS.y-30*V_DIR.y +  V_UP.y*8;
   V_EYE.z=V_POS.z-30*V_DIR.z +  V_UP.z*8;
+
+ if (V_EYE.x > 0 && V_EYE.y > 0 && V_EYE.y < LONGUEUR_MAP && V_EYE.x < LARGEUR_MAP){ // On est bien à l'intérieur de la map
+    if (V_EYE.z <=tab_decors[(int)V_EYE.x][(int)V_EYE.y]+1) { // On est au niveau du sol ( ou en-dessous!)
+      /* Traitement en cas de collision avec le sol :*/
+      V_EYE.z=tab_decors[(int)V_EYE.x][(int)V_EYE.y];
+    }
+ }
   
   gluLookAt(V_EYE.x,
 	    V_EYE.y,
@@ -586,23 +653,40 @@ void affichage(){
  
   if (!auto_scroll_toggle)
     {
-  V_POS = f3_add_f3(V_POS,f3_add_f3(V_DIR,mul_float3(V_DIR,S_VIT/10)));
+      //       printf("vit : %f \n",mul_float3(V_DIR,S_VIT).z);
+      /* if (COL_DET == 0) {
+	if (S_VIT < VIT_MIN ) {
+	  S_VIT = VIT_MIN;
+	}
+	}*/
+  V_POS = f3_add_f3(V_POS,mul_float3(V_DIR,S_VIT));
     }
 
   /* Gestion des collisions + gravité joueur */
   
   if (V_POS.x > 0 && V_POS.y > 0 && V_POS.y < LONGUEUR_MAP && V_POS.x < LARGEUR_MAP){ // On est bien à l'intérieur de la map
-    if (V_POS.z <=tab_decors[(int)V_POS.x][(int)V_POS.y]) { // On est au niveau du sol ( ou en-dessous!)
+    if (V_POS.z <=tab_decors[(int)V_POS.x][(int)V_POS.y]+1) { // On est au niveau du sol ( ou en-dessous!)
       /* Traitement en cas de collision avec le sol :*/
       V_POS.z=tab_decors[(int)V_POS.x][(int)V_POS.y];
-      vie--;
+      if (S_VIT > 2 && ARR==1 ) { /* On perd de la vie si on va trop vite et tant qu'on ne s'est pas arrêté */
+	vie--;
+      }
+      COL_DET=1;
+
+      S_VIT*=.8;
+      if (S_VIT < VIT_MIN ) {
+	ARR = 0 ;
+      }
+      S_VIT = clamp_min_max_f(S_VIT,0,VIT_MAX); /* Dans tous les cas on réduit la vitesse */
     }
     else {
       /* Traitement du cas courant : vol sans turbulences */
       /* Prise en compte de la gravité : si le nez pointe vers le bas : acceleration sinon ralentissement */
       float ps = produit_scalaire (V_UP_INIT,V_DIR);
-      S_VIT -= ps/2;
-      S_VIT = clamp_min_max_f(S_VIT,0,VIT_MAX);
+      S_VIT -= ps/4;
+      S_VIT = clamp_min_max_f(S_VIT,VIT_MIN,VIT_MAX);
+      COL_DET=0;
+      ARR=1;
     }
   }
 
@@ -671,11 +755,15 @@ void affichage(){
 
 
   
-
-  /* Dessin jauge de vie - avant mise à jour du vecteur pos pour qu'elle soit statique à l'écran*/
-  if (start!=0)
+  /* Dessin de l'interface */
+  if (start!=0) {
+    
+  /* Dessin jauge de vie */
   dessin_jauge(5,5,130,50,vie,BLEU,GRIS,ROUGE);
-  
+
+  /* Dessin des munitions restantes */
+  dessin_munitions(150,5,130,50,mun,MUN_MAX,NOIR,GRIS);
+  }
   glutSwapBuffers();
 
 }
@@ -726,9 +814,12 @@ void keyPressed (unsigned char key, int x, int y) {
   if (key == 'm'){    
     key_m=1;
   }
-  if (key == 32){
-    projectile(V_DIR,V_POS);
-    //   fprintf(stderr,"VEC: %f %f %f \n",V_DIR.x+cote_projectile,V_DIR.y+cote_projectile,V_DIR.z+cote_projectile);
+  if (key == 32){ // touche espace
+    if (mun > 0 ){
+      projectile(V_DIR,V_POS);
+      //   fprintf(stderr,"VEC: %f %f %f \n",V_DIR.x+cote_projectile,V_DIR.y+cote_projectile,V_DIR.z+cote_projectile);
+      mun --;
+    }
   }
   if (key=='n'){
     if(nuages_toggle) nuages_toggle=0;
@@ -738,6 +829,16 @@ void keyPressed (unsigned char key, int x, int y) {
   if (key=='b'){
     if(auto_scroll_toggle) auto_scroll_toggle=0;
     else auto_scroll_toggle=1;
+  }
+  if (key==13){ // touche entrée
+    if (dans_vaisseau && COL_DET ){
+      printf("ça sort !! \n");
+      toggle(dans_vaisseau);
+    }
+    if (!dans_vaisseau && a_portee_vaisseau){
+      printf("ça rentre\n");
+    }
+    
   }
 
 }
@@ -811,6 +912,7 @@ int main(int argc, char**argv){
   taille_projectile=1;
   r_1=r_2=r_3=0;
   vie=100;
+  mun = 50;
   srand((unsigned) time(&t));
 
   if ( (tab_decors = malloc (sizeof(float *) * LARGEUR_MAP )) == NULL ) {
@@ -832,6 +934,8 @@ int main(int argc, char**argv){
   }
 
   r_sphere_joueur=5;
+  COL_DET=0;
+  ARR=0;
   float3 init= init_float3(-5000,-5000,-5000);
   for( i=0;i<50;i++)
     tab_proj[i][0]=init;
@@ -914,8 +1018,10 @@ tab_chute_ennemi[10][1]=0;
   glutInitDisplayMode(GLUT_RGBA|GLUT_SINGLE|GLUT_DEPTH);
 
   //taille & pos
-  glutInitWindowSize(800, 800); //ou fullscreen
-  glutInitWindowPosition(50, 50);
+  //  glutInitWindowSize(800,800); //ou fullscreen
+  // glutInitWindowPosition(50, 50);
+  glutInitWindowSize(1920,1080);
+
 
   
   glutCreateWindow("FIGHT MILK");
