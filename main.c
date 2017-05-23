@@ -6,11 +6,20 @@
 
 #define LARGEUR_MAP 1000 // X <==> i 
 #define LONGUEUR_MAP 1000 // Y <==> j
+#define NB_MUNITIONS 500
+#define NB_ENNEMIS 10
+
+#define NB_ARBRES 500
+#define ARBRE_R 200
+#define NB_BOSQUET 30 // 
+#define NB_ARBRE_BOSQUET 9
+/* /!\ NB_ARBRES= ARBRE_R + NB_BOSQUET*(NB_ARBRE_BOSQUET+1) /!\ */
 
 #define VIT_MAX 5
 #define VIT_MIN 1
 #define MUN_MAX 50
 #define VIE_MAX 100
+
 int barre_mur=1;
 
 /* Variables start truc jaune */
@@ -18,15 +27,7 @@ float start_ajout_x;
 float start_ajout_y;
 int start=0;
 int first_pass=1;
-float3 tab_ennemi[10];
-int tab_chute_ennemi[10][3];
-// 0 - est en train de tomber
-// 1 - angle de chute
-// 2 - vitesse
 
-
-
-karbre karbre8;
 int r_1,r_2,r_3;
 int seuil;
 // Variables detection collision
@@ -35,17 +36,21 @@ int COL_DET;
 int ARR;
 // Variables décors
 int nuages;
+karbre karbre8;
 
-float3 tab_arbre[500];
-float scale_arbre[500];
-float tab_lait[200][2];
-//float tab_decors[500][500];
+float3* tab_arbre;
+float* scale_arbre;
+float ** tab_lait;
 float ** tab_decors;
+float3* tab_ennemi;
+int** tab_chute_ennemi;
+// 0 - est en train de tomber
+// 1 - angle de chute
+// 2 - vitesse
+
 int rand_seed;
 int nuages_toggle=1;
 int auto_scroll_toggle=1;
-int arbre=1;
-
 int cote_projectile;
 int taille_projectile;
 // Variables d'animation
@@ -90,7 +95,7 @@ float3 V_EYE;
 
 void ennemis(float3 centre){
   int i;
-  for( i=0;i<10;i++){
+  for( i=0;i<NB_ENNEMIS;i++){
     
     if (tab_ennemi[i].y==-1){
       tab_ennemi[i].x=centre.x;
@@ -109,7 +114,7 @@ void ennemis(float3 centre){
 void intersection_munition(){
   float3 m1_lait;
   float3 m2_lait;
-  for(int i=0; i<200; i++){
+  for(int i=0; i<NB_MUNITIONS; i++){
     m1_lait=init_float3(tab_lait[i][0]-2,tab_lait[i][1]-2,tab_decors[(int)tab_lait[i][0]][(int)tab_lait[i][1]]-2);
     m2_lait=init_float3(tab_lait[i][0]+2,tab_lait[i][1]+2,tab_decors[(int)tab_lait[i][0]][(int)tab_lait[i][1]]+2);
     affiche_cube(m1_lait,m2_lait);
@@ -151,7 +156,7 @@ void intersection_munition(){
 
 int intersection_proj_ennemi(float3 proj[3]){
   int i;
-  for(i=0; i<10; i++){
+  for(i=0; i<NB_ENNEMIS; i++){
     if(distance_point(proj[1],proj[1])/2 + distance_point(init_float3(tab_ennemi[i].x-6*tab_chute_ennemi[i][2],tab_ennemi[i].y-6*tab_chute_ennemi[i][2],tab_ennemi[i].z-6*tab_chute_ennemi[i][2]),init_float3(tab_ennemi[i].x+6*tab_chute_ennemi[i][2],tab_ennemi[i].y+6*tab_chute_ennemi[i][2],tab_ennemi[i].z+6*tab_chute_ennemi[i][2]))/2 >
        distance_point(milieu_cube(proj[1],proj[2]),tab_ennemi[i])){
       tab_chute_ennemi[i][0]=1;
@@ -164,9 +169,9 @@ int intersection_proj_ennemi(float3 proj[3]){
 
 void intersection_ennemi_ennemi(){
   int i,j;
-  for(i=0; i<10; i++){
+  for(i=0; i<NB_ENNEMIS; i++){
     
-    for(j=1; j<10; j++){
+    for(j=1; j<NB_ENNEMIS; j++){
       // -5 valeur arbitraire pour ne pas avoir de gros écarts;
       if(distance_point(init_float3(tab_ennemi[i].x-6*tab_chute_ennemi[i][2],tab_ennemi[i].y-6*tab_chute_ennemi[i][2],tab_ennemi[i].z-6*tab_chute_ennemi[i][2]),init_float3(tab_ennemi[i].x+6*tab_chute_ennemi[i][2],tab_ennemi[i].y+6*tab_chute_ennemi[i][2],tab_ennemi[i].z+6*tab_chute_ennemi[i][2]))/2 +
 	 distance_point(init_float3(tab_ennemi[(i+j)%10].x-6*tab_chute_ennemi[(i+j)%10][2],tab_ennemi[(i+j)%10].y-6*tab_chute_ennemi[(i+j)%10][2],tab_ennemi[(i+j)%10].z-6*tab_chute_ennemi[(i+j)%10][2]),init_float3(tab_ennemi[(i+j)%10].x+6*tab_chute_ennemi[(i+j)%10][2],tab_ennemi[(i+j)%10].y+6*tab_chute_ennemi[(i+j)%10][2],tab_ennemi[(i+j)%10].z+6*tab_chute_ennemi[(i+j)%10][2]))/2 >
@@ -214,11 +219,11 @@ void start_anim(){
     glEnd();
     if (start==1){
       
-  if (first_pass){
-    vie= VIE_MAX;
-    mun = MUN_MAX;
-    first_pass = 0;
-  }
+      if (first_pass){
+	vie= VIE_MAX;
+	mun = MUN_MAX;
+	first_pass = 0;
+      }
       start_ajout_x+=((float)LARGEUR_MAP/(float)LONGUEUR_MAP)*5;
       start_ajout_y+=((float)LONGUEUR_MAP/(float)LARGEUR_MAP)*5;
     }
@@ -329,18 +334,18 @@ void aplanir(){
 
 
 void init_arbres(){
-  /* 200 arbres random, 29 bosquets de 1+9 arbres */
+  /* 200 arbres random, 30 bosquets de 1+9 arbres */
   
   int i,j;
-  for(i=0; i<200; i++){
+  for(i=0; i<ARBRE_R; i++){
     tab_arbre[i].x=rand()%(LARGEUR_MAP-20)+10;
     tab_arbre[i].y=rand()%(LONGUEUR_MAP-20)+10;
     tab_arbre[i].z=1; /* TYPE = ARBRE, on utilise tab_decors pour la hauteur*/
     scale_arbre[i]=(float)(rand()%20)/(float)10;
 
   }
-  int indice=200;
-  for(i=0; i<29; i++){// 10*15
+  int indice=ARBRE_R;
+  for(i=0; i<NB_BOSQUET; i++){
     int randx=rand()%(LARGEUR_MAP-10)+5;
     int randy=rand()%(LONGUEUR_MAP-10)+5;
     tab_arbre[indice].x=randx;
@@ -348,20 +353,19 @@ void init_arbres(){
     tab_arbre[indice].z=1;
     scale_arbre[indice]=(float)(rand()%20)/(float)10;
     indice++;
-    for(j=0;j<9;j++){
+    for(j=0;j<((NB_ARBRES-ARBRE_R)/NB_BOSQUET)-1;j++){
       int signe=rand()%2-1;
       if (signe==0) signe=1;
       tab_arbre[indice].x=clamp_min_max(randx+signe*rand()%30,10,LARGEUR_MAP-10);
       signe=rand()%2-1;
       if (signe==0) signe=1;
       tab_arbre[indice].y=clamp_min_max(randy+signe*rand()%30,10,LONGUEUR_MAP-10);
-      indice++;
       tab_arbre[indice].z=1;
       scale_arbre[indice]=(float)(rand()%20)/(float)10;
+      indice++;
     }
     
   }
-  arbre++;
   
 }
 
@@ -370,7 +374,7 @@ void init_lait(){
   int centreX = LARGEUR_MAP / 4;
   int centreY = LONGUEUR_MAP / 4;
   int i;
-  for(i=0; i<200; i++){
+  for(i=0; i<NB_MUNITIONS; i++){
     tab_lait[i][0]=rand()%(LARGEUR_MAP-centreX)+centreX/2;
     tab_lait[i][1]=rand()%(LONGUEUR_MAP-centreY)+centreY/2;
   }
@@ -378,7 +382,7 @@ void init_lait(){
 
 void dessin_lait(){
   int i;
-  for(i=0; i<200; i++){
+  for(i=0; i<NB_MUNITIONS; i++){
     if (tab_lait[i][0]==-1){
       int centreX = LARGEUR_MAP / 4;
       int centreY = LONGUEUR_MAP / 4;
@@ -603,28 +607,28 @@ void affichage(){
 
   /*
 
-_________________________
-|                        |
-|                        |
-|                        |               -10
-|                        |                ^
-|                        |                "
-|                        |                "
-|           X            |     -10   <=========>  10   Frustum en mode 800 x 800
-|                        |                "
-|                        |                "
-|                        |                v
-|                        |               10
-|________________________|
+    _________________________
+    |                        |
+    |                        |
+    |                        |               -10
+    |                        |                ^
+    |                        |                "
+    |                        |                "
+    |           X            |     -10   <=========>  10   Frustum en mode 800 x 800
+    |                        |                "
+    |                        |                "
+    |                        |                v
+    |                        |               10
+    |________________________|
 
 
-Frustum en 1920 x 1080 ?? 
+    Frustum en 1920 x 1080 ?? 
 
-800 --> 20     |   800 --> 20
-1920 --> 48    |   1080 --> 27
+    800 --> 20     |   800 --> 20
+    1920 --> 48    |   1080 --> 27
 
 
-   */
+  */
 
   
   glFrustum(-24,24,-13,13,20,1000);
@@ -635,12 +639,12 @@ Frustum en 1920 x 1080 ??
   V_EYE.y=V_POS.y-30*V_DIR.y +  V_UP.y*8;
   V_EYE.z=V_POS.z-30*V_DIR.z +  V_UP.z*8;
 
- if (V_EYE.x > 0 && V_EYE.y > 0 && V_EYE.y < LONGUEUR_MAP && V_EYE.x < LARGEUR_MAP){ // On est bien à l'intérieur de la map
+  if (V_EYE.x > 0 && V_EYE.y > 0 && V_EYE.y < LONGUEUR_MAP && V_EYE.x < LARGEUR_MAP){ // On est bien à l'intérieur de la map
     if (V_EYE.z <=tab_decors[(int)V_EYE.x][(int)V_EYE.y]+1) { // On est au niveau du sol ( ou en-dessous!)
       /* Traitement en cas de collision avec le sol :*/
       V_EYE.z=tab_decors[(int)V_EYE.x][(int)V_EYE.y];
     }
- }
+  }
   
   gluLookAt(V_EYE.x,
 	    V_EYE.y,
@@ -682,7 +686,7 @@ Frustum en 1920 x 1080 ??
   }
 
   
-  for( i=0; i<10; i++){
+  for( i=0; i<NB_ENNEMIS; i++){
     /* Methode patarasse */
     if(tab_ennemi[i].y!=-1){
       if (tab_ennemi[i].y>=LONGUEUR_MAP+100 || tab_ennemi[i].z<0){
@@ -739,11 +743,11 @@ Frustum en 1920 x 1080 ??
     {
       //       printf("vit : %f \n",mul_float3(V_DIR,S_VIT).z);
       /* if (COL_DET == 0) {
-	if (S_VIT < VIT_MIN ) {
-	  S_VIT = VIT_MIN;
-	}
-	}*/
-  V_POS = f3_add_f3(V_POS,mul_float3(V_DIR,S_VIT));
+	 if (S_VIT < VIT_MIN ) {
+	 S_VIT = VIT_MIN;
+	 }
+	 }*/
+      V_POS = f3_add_f3(V_POS,mul_float3(V_DIR,S_VIT));
 
     }
 
@@ -796,18 +800,18 @@ Frustum en 1920 x 1080 ??
   glColor4f(0,1,1,1);
 
   /*
-  for(i=0; i<LARGEUR_MAP; i=i+10){
+    for(i=0; i<LARGEUR_MAP; i=i+10){
     glVertex3f(i,0,0);
     glVertex3f(i,0,300);
-  }
+    }
 
   
-  glVertex3f(0,0,pppp);
-  glVertex3f(LARGEUR_MAP,0,pppp);
+    glVertex3f(0,0,pppp);
+    glVertex3f(LARGEUR_MAP,0,pppp);
       
 
-  pppp++;
-  pppp= pppp%300;
+    pppp++;
+    pppp= pppp%300;
   */
   glEnd();
 
@@ -843,11 +847,11 @@ Frustum en 1920 x 1080 ??
   /* Dessin de l'interface */
   if (start!=0) {
     
-  /* Dessin jauge de vie */
-  dessin_jauge(5,5,130,50,vie,BLEU,GRIS,ROUGE);
+    /* Dessin jauge de vie */
+    dessin_jauge(5,5,130,50,vie,BLEU,GRIS,ROUGE);
 
-  /* Dessin des munitions restantes */
-  dessin_munitions(150,5,130,50,mun,MUN_MAX,NOIR,GRIS);
+    /* Dessin des munitions restantes */
+    dessin_munitions(150,5,130,50,mun,MUN_MAX,NOIR,GRIS);
   }
   glutSwapBuffers();
 
@@ -1018,6 +1022,44 @@ int main(int argc, char**argv){
     }
   }
 
+  if ( (tab_lait = malloc (sizeof(float *) * NB_MUNITIONS )) == NULL ) {
+    printf("Plus de mémoire :( \n");
+    exit (-1);
+  }
+  else
+    for (i=0; i< NB_MUNITIONS;i++) {
+      if (( tab_lait[i]= malloc( sizeof(float) * 2)) == NULL ) {
+	printf("Plus de mémoire :( \n");
+	exit (-1);	
+      }
+    }
+
+  if ( (tab_arbre = malloc (sizeof(float3) * NB_ARBRES )) == NULL ) {
+    printf("Plus de mémoire :( \n");
+    exit (-1);
+  }
+  if ( (scale_arbre = malloc (sizeof(float) * NB_ARBRES )) == NULL ) {
+    printf("Plus de mémoire :( \n");
+    exit (-1);
+  }
+  if ( (tab_ennemi = malloc (sizeof(float3) * NB_ENNEMIS )) == NULL ) {
+    printf("Plus de mémoire :( \n");
+    exit (-1);
+  }
+
+
+  if ( (tab_chute_ennemi = malloc (sizeof(int *) * NB_ENNEMIS )) == NULL ) {
+    printf("Plus de mémoire :( \n");
+    exit (-1);
+  }
+  else
+    for (i=0; i<NB_ENNEMIS;i++) {
+      if (( tab_chute_ennemi[i]= malloc( sizeof(int) * 3)) == NULL ) {
+	printf("Plus de mémoire :( \n");
+	exit (-1);	
+      }
+    }
+
   r_sphere_joueur=5;
   COL_DET=0;
   ARR=0;
@@ -1070,25 +1112,25 @@ int main(int argc, char**argv){
     for ( i = 0 ; i < 1000 ;i++ )
     tab_decors[i][150] = -50;
   */
-  fprintf(stderr,"TEEEEEEEEEEEEEEEST2\n");
   
   for ( i =0 ; i<50 ; i++)
     mountain(rand()%LARGEUR_MAP,rand()%LONGUEUR_MAP,rand()%150+30);
   
   for (  i = 0 ; i < 28; i++)   aplanir();
 
-  
+ 
   init_arbres();
-
-  karbre8=cons_arbre(tab_arbre,scale_arbre,500,tab_decors);
-  
   init_lait();
-
-  for (i=0; i<10; i++){
+  
+  karbre8=cons_arbre(tab_arbre,scale_arbre,NB_ARBRES,tab_decors);
+  
+  
+  for (i=0; i<NB_ENNEMIS; i++){
     tab_ennemi[i]=init_float3(-5000,-1,-5000);
-    tab_chute_ennemi[10][0]=0;
-    tab_chute_ennemi[10][1]=0;
+    tab_chute_ennemi[i][0]=0;
+    tab_chute_ennemi[i][1]=0;
   }
+  
   /*
 
     fprintf(stderr,"VECT: %f %f %f \n",V_UP.x,V_UP.y,V_UP.z);
@@ -1116,14 +1158,14 @@ int main(int argc, char**argv){
 
   /*
   
-            glEnable(GL_FOG) ;
-            GLfloat fogcolor[4] = {0.1,0.1,0.2,0.2} ;
-            GLint fogmode = GL_EXP ;
-            glFogi (GL_FOG_MODE, fogmode) ;
-            glFogfv(GL_FOG_COLOR, fogcolor) ;
-            glFogf(GL_FOG_DENSITY, 0.005) ;
-            glFogf(GL_FOG_START, 29.0) ;
-            glFogf(GL_FOG_END, 3.0) ;
+    glEnable(GL_FOG) ;
+    GLfloat fogcolor[4] = {0.1,0.1,0.2,0.2} ;
+    GLint fogmode = GL_EXP ;
+    glFogi (GL_FOG_MODE, fogmode) ;
+    glFogfv(GL_FOG_COLOR, fogcolor) ;
+    glFogf(GL_FOG_DENSITY, 0.005) ;
+    glFogf(GL_FOG_START, 29.0) ;
+    glFogf(GL_FOG_END, 3.0) ;
   
   */
   //glutMouseFunc glutKeyboardFunc
