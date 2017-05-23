@@ -21,7 +21,8 @@
 #define VIE_MAX 100
 
 int barre_mur=1;
-
+// rouge variable de fin
+float rouge=0;
 float3 pt_inters;
 
 /* Variables start truc jaune */
@@ -104,14 +105,9 @@ float3 V_EYE;
 
 void fin(){
   if(vie<=0){
-    printf("FINIIIIIIIIIIIIIIIIIIIIIII\n");
+    rouge=0.8;
     karbre8=NULL;
-    glClearColor(0.5,0.1,0.2,0.2);
-
-
-  glutPostRedisplay();
-
-
+    
   }
 
 
@@ -220,6 +216,40 @@ void intersection_ennemi_ennemi(){
     }
   }
 }
+void mur_ennemi(){
+  int i;
+  /* mur apparition */
+  glBegin(GL_LINES);
+  glColor4f(0,1,1,1);
+  for(i=0; i<LARGEUR_MAP; i=i+10){
+    glVertex3f(i,0,0);
+    glVertex3f(i,0,300);
+  }
+    glVertex3f(0,0,barre_mur);
+    glVertex3f(LARGEUR_MAP,0,barre_mur);
+    barre_mur++;
+    barre_mur= barre_mur%300;
+
+
+  
+    glEnd();
+    
+    glColor4f(0.1,0.1,0.2,0.5);
+    glBegin(GL_QUADS);
+    glVertex3f(0,LONGUEUR_MAP,0);
+    glVertex3f(LARGEUR_MAP,LONGUEUR_MAP,0);
+      
+    glVertex3f(LARGEUR_MAP,LONGUEUR_MAP,300);
+    glVertex3f(0,LONGUEUR_MAP,300);
+
+    glEnd();
+  
+
+    /* mur disparition */
+  
+
+  
+}
 void start_anim(){
   
   if (start_ajout_x<=LARGEUR_MAP/2){
@@ -260,8 +290,15 @@ void start_anim(){
   else{
     start=2;
 
-    
-    ennemis(init_float3(rand()%LARGEUR_MAP,0,150+rand()%150));
+    if (rouge==0){
+      
+      mur_ennemi();
+      ennemis(init_float3(rand()%LARGEUR_MAP,0,150+rand()%150));
+
+      intersection_munition();
+
+
+    }
     //active collision
     //active le jeu
 
@@ -270,41 +307,6 @@ void start_anim(){
 }
 
 
-void mur_ennemi(){
-  int i;
-  /* mur apparition */
-  glBegin(GL_LINES);
-  if (start==2){
-    glColor4f(0,1,1,1);
-    for(i=0; i<LARGEUR_MAP; i=i+10){
-      glVertex3f(i,0,0);
-      glVertex3f(i,0,300);
-    }
-    glVertex3f(0,0,barre_mur);
-    glVertex3f(LARGEUR_MAP,0,barre_mur);
-    barre_mur++;
-    barre_mur= barre_mur%300;
-
-
-  
-    glEnd();
-    
-    glColor4f(0.1,0.1,0.2,0.5);
-    glBegin(GL_QUADS);
-    glVertex3f(0,LONGUEUR_MAP,0);
-    glVertex3f(LARGEUR_MAP,LONGUEUR_MAP,0);
-      
-    glVertex3f(LARGEUR_MAP,LONGUEUR_MAP,300);
-    glVertex3f(0,LONGUEUR_MAP,300);
-
-    glEnd();
-  
-
-    /* mur disparition */
-  }
-
-
-}
 
 int clamp_min_max(int n, int min, int max){
   if (n<min) return min;
@@ -411,6 +413,7 @@ void init_lait(){
 
 void dessin_lait(){
   int i;
+  if (rouge!=0) return;
   for(i=0; i<NB_MUNITIONS; i++){
     if (tab_lait[i][0]==-1){
       int centreX = LARGEUR_MAP / 4;
@@ -663,7 +666,7 @@ void affichage(){
 
   // float3 centre_cube=milieu_cube(p1,p2);
 
-  glClearColor(0.1,0.1,0.2,0.2);
+  glClearColor(0.1+rouge,0.1,0.2,0.2);
 
   
   glMatrixMode(GL_MODELVIEW);
@@ -772,7 +775,7 @@ void affichage(){
 	if(intersection_proj_ennemi(tab_proj[i])==1){
 	  tab_proj[i][0].x=-5000;
 	  //fprintf(stderr,"JINTERSEQUTE\n");
-	  score++;
+	  if(rouge==0) score++;
 	}
 	else{
 	  tab_proj[i][1].x+=5*tab_proj[i][0].x;
@@ -837,7 +840,6 @@ void affichage(){
     glVertex3f( V_DIR.x*100, V_DIR.y*100, V_DIR.z*100);
   */
 
-  intersection_munition();
 
   /* Gestion des collisions + gravité joueur */
   if (dans_vaisseau){
@@ -919,8 +921,6 @@ void affichage(){
     pppp= pppp%300;
   */
   glEnd();
-
-  mur_ennemi();
 
 
   /* on pourra faire fonction generale avec le .z > type */
