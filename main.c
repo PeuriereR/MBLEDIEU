@@ -4,7 +4,7 @@
 #include "construction_karbre.h"
 #include "util.h"
 
-#define LARGEUR_MAP 1000 // X <==> i 
+#define LARGEUR_MAP 500 // X <==> i 
 #define LONGUEUR_MAP 1000 // Y <==> j
 
 #define VIT_MAX 5
@@ -76,6 +76,7 @@ float S_VIT_P;
 
 float vie;
 int mun;
+int score;
 float3 p2;
 float3 p1_hyperC,p2_hyperC;
 float3 p1_hyperC2,p2_hyperC2;
@@ -226,6 +227,7 @@ void start_anim(){
   if (first_pass){
     vie= VIE_MAX;
     mun = MUN_MAX;
+    score=0;
     first_pass = 0;
   }
       start_ajout_x+=((float)LARGEUR_MAP/(float)LONGUEUR_MAP)*5;
@@ -746,7 +748,8 @@ Frustum en 1920 x 1080 ??
 	
 	if(intersection_proj_ennemi(tab_proj[i])==1){
 	  tab_proj[i][0].x=-5000;
-	  fprintf(stderr,"JINTERSEQUTE\n");
+	  //fprintf(stderr,"JINTERSEQUTE\n");
+	  score++;
 	}
 	else{
 	  tab_proj[i][1].x+=5*tab_proj[i][0].x;
@@ -927,17 +930,21 @@ Frustum en 1920 x 1080 ??
   dessin_grille();
 
 
-
+  //REMETRE LE IF !!!!!! 
   
-  /* Dessin de l'interface */
-  if (start!=0) {
+  /* Dessin de l'interface */ 
+  //  if (start!=0) {
     
   /* Dessin jauge de vie */
   dessin_jauge(5,5,130,50,vie,BLEU,GRIS,ROUGE);
 
   /* Dessin des munitions restantes */
   dessin_munitions(150,5,130,50,mun,MUN_MAX,NOIR,GRIS);
-  }
+
+  /* Affichage du score */
+  dessin_score(620,750,160,50,score,BLANC,NOIR,BLEU);
+
+  //}
   glutSwapBuffers();
 
 }
@@ -1093,6 +1100,7 @@ int main(int argc, char**argv){
   r_1=r_2=r_3=0;
   vie=100;
   mun = 50;
+  score=0;
   srand((unsigned) time(&t));
 
   if ( (tab_decors = malloc (sizeof(float *) * LARGEUR_MAP )) == NULL ) {
