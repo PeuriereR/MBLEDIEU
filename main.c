@@ -4,6 +4,8 @@
 #include "construction_karbre.h"
 #include "util.h"
 
+/* PARAMETRES */
+
 #define LARGEUR_MAP 500 // X <==> i 
 #define LONGUEUR_MAP 1000 // Y <==> j
 #define NB_MUNITIONS 500
@@ -23,20 +25,20 @@
 int barre_mur=1;
 // rouge variable de fin
 float rouge=0;
-float3 pt_inters;
 
-/* Variables start truc jaune */
+/* Variables start jaune */
 float start_ajout_x;
 float start_ajout_y;
 int start=0;
 int first_pass=1;
 
-int r_1,r_2,r_3;
 int seuil;
 // Variables detection collision
+float3 pt_inters;
 float r_sphere_joueur;
 int COL_DET;
 int ARR;
+
 // Variables décors
 int nuages;
 karbre karbre8;
@@ -51,8 +53,14 @@ int** tab_chute_ennemi;
 // 1 - angle de chute
 // 2 - vitesse
 
+
 float3 diff_pos_pos_p;
 float norme_diff_pos_pos_p ;
+
+// table de projectiles 
+float3 tab_proj[50][3];
+
+
 int rand_seed;
 int nuages_toggle=1;
 int auto_scroll_toggle=1;
@@ -87,9 +95,6 @@ float S_VIT_P;
 float vie;
 int mun;
 int score;
-float3 p2;
-float3 p1_hyperC,p2_hyperC;
-float3 p1_hyperC2,p2_hyperC2;
 
 float3 V_DIR;
 float3 V_90;
@@ -101,7 +106,6 @@ float3 V_UP_P;
 
 float3 V_UP_INIT;
 float3 V_90_INIT;
-float3 tab_proj[50][3];
 float3 V_EYE;
 
 
@@ -109,17 +113,14 @@ void fin(){
   if(vie<=0){
     rouge=0.8;
     karbre8=NULL;
-    
   }
-
-
-  }
+}
 
 
 void ennemis(float3 centre){
+  //Cree un ennemi si possible
   int i;
   for( i=0;i<NB_ENNEMIS;i++){
-    
     if (tab_ennemi[i].y==-1){
       tab_ennemi[i].x=centre.x;
       tab_ennemi[i].y=centre.y;
@@ -135,6 +136,7 @@ void ennemis(float3 centre){
 
 
 void intersection_munition(){
+  // Permet de recuperer les munitions au sol
   float3 m1_lait;
   float3 m2_lait;
   int i;
@@ -144,47 +146,48 @@ void intersection_munition(){
     affiche_cube(m1_lait,m2_lait);
     
     if (dans_cube(V_POS_P,m1_lait,m2_lait)
-      || dans_cube(init_float3(V_POS_P.x+10*V_DIR.x,
-			       V_POS_P.y+10*V_DIR.y,
-			       V_POS_P.z+10*V_DIR.z),m1_lait,m2_lait)
-      || dans_cube(init_float3(V_POS_P.x+10*V_90.x,
-			       V_POS_P.y+10*V_90.y,
-			       V_POS_P.z+10*V_90.z),m1_lait,m2_lait)
+	|| dans_cube(init_float3(V_POS_P.x+10*V_DIR.x,
+				 V_POS_P.y+10*V_DIR.y,
+				 V_POS_P.z+10*V_DIR.z),m1_lait,m2_lait)
+	|| dans_cube(init_float3(V_POS_P.x+10*V_90.x,
+				 V_POS_P.y+10*V_90.y,
+				 V_POS_P.z+10*V_90.z),m1_lait,m2_lait)
       
-      || dans_cube(init_float3(V_POS_P.x-10*V_90.x,
-			       V_POS_P.y-10*V_90.y,
-			       V_POS_P.z-10*V_90.z),m1_lait,m2_lait)
+	|| dans_cube(init_float3(V_POS_P.x-10*V_90.x,
+				 V_POS_P.y-10*V_90.y,
+				 V_POS_P.z-10*V_90.z),m1_lait,m2_lait)
       
-      || dans_cube(init_float3(V_POS_P.x+10*V_UP.x,
-			       V_POS_P.y+10*V_UP.y,
-			       V_POS_P.z+10*V_UP.z),m1_lait,m2_lait)
+	|| dans_cube(init_float3(V_POS_P.x+10*V_UP.x,
+				 V_POS_P.y+10*V_UP.y,
+				 V_POS_P.z+10*V_UP.z),m1_lait,m2_lait)
 
 	){
       if (!dans_vaisseau){
-	//	printf("INTERSLAIT\n");
-	//ICI +MUNITION
-	//FAIRE DISPARAITRE LA MUNITION
+	// On fait disparaitre la munition
 	tab_lait[i][0]=-1;
+	// On recharge
 	mun=clamp_min_max_f(mun+5,0,50);
       }
     }
-    
   }
 
+  // Intersection avec les troncs, variable levee dans construction_karbre.c
   if (INTERS_TRONC==1){
     if (dans_vaisseau && S_VIT > 2){
+      // Collision > on stoppe la vitesse
       S_VIT=0;
       INTERS_TRONC=0;
+      // Pour ne pas se heurter 2 fois de suite au meme arbre
       if(distance_point(V_POS,pt_inters)>100){
 	vie-=30;
       }
       pt_inters=V_POS;      
     }
   }
-  
 }
 
 int intersection_proj_ennemi(float3 proj[3]){
+  // Collision entre projectiles et les cubes ennemis
   int i;
   for(i=0; i<NB_ENNEMIS; i++){
     if(distance_point(proj[1],proj[1])/2 + distance_point(init_float3(tab_ennemi[i].x-6*tab_chute_ennemi[i][2],tab_ennemi[i].y-6*tab_chute_ennemi[i][2],tab_ennemi[i].z-6*tab_chute_ennemi[i][2]),init_float3(tab_ennemi[i].x+6*tab_chute_ennemi[i][2],tab_ennemi[i].y+6*tab_chute_ennemi[i][2],tab_ennemi[i].z+6*tab_chute_ennemi[i][2]))/2 >
@@ -192,25 +195,25 @@ int intersection_proj_ennemi(float3 proj[3]){
       tab_chute_ennemi[i][0]=1;
       return 1;
     }
-
   }
   return 0;
 }
 
 void intersection_ennemi_ennemi(){
+  // Deux ennemis si ils se touchent se font tomber
   int i,j;
   for(i=0; i<NB_ENNEMIS; i++){
-    
     for(j=1; j<NB_ENNEMIS; j++){
-      // -5 valeur arbitraire pour ne pas avoir de gros écarts;
+      // 6 coefficient arbitraire pour pallier la vitesse par la taille
       if(distance_point(init_float3(tab_ennemi[i].x-6*tab_chute_ennemi[i][2],tab_ennemi[i].y-6*tab_chute_ennemi[i][2],tab_ennemi[i].z-6*tab_chute_ennemi[i][2]),init_float3(tab_ennemi[i].x+6*tab_chute_ennemi[i][2],tab_ennemi[i].y+6*tab_chute_ennemi[i][2],tab_ennemi[i].z+6*tab_chute_ennemi[i][2]))/2 +
 	 distance_point(init_float3(tab_ennemi[(i+j)%10].x-6*tab_chute_ennemi[(i+j)%10][2],tab_ennemi[(i+j)%10].y-6*tab_chute_ennemi[(i+j)%10][2],tab_ennemi[(i+j)%10].z-6*tab_chute_ennemi[(i+j)%10][2]),init_float3(tab_ennemi[(i+j)%10].x+6*tab_chute_ennemi[(i+j)%10][2],tab_ennemi[(i+j)%10].y+6*tab_chute_ennemi[(i+j)%10][2],tab_ennemi[(i+j)%10].z+6*tab_chute_ennemi[(i+j)%10][2]))/2 >
 	 distance_point(tab_ennemi[i],tab_ennemi[(i+j)%10])+10){
+	// On les fait tomber
 	tab_chute_ennemi[i][0]=1;
 	tab_chute_ennemi[(i+j)%10][0]=1;
       }
     }
-    /* Collision avec nous, On decale de 10*V90 ou on traverse*/
+    /* Collision avec nous, On decale de -30*V_DIR */
     if(distance_point(init_float3(tab_ennemi[i].x-6*tab_chute_ennemi[i][2],tab_ennemi[i].y-6*tab_chute_ennemi[i][2],tab_ennemi[i].z-6*tab_chute_ennemi[i][2]),init_float3(tab_ennemi[i].x+6*tab_chute_ennemi[i][2],tab_ennemi[i].y+6*tab_chute_ennemi[i][2],tab_ennemi[i].z+6*tab_chute_ennemi[i][2]))/2 >
        distance_point(tab_ennemi[i],V_POS)){
       tab_chute_ennemi[i][0]=1;
@@ -223,42 +226,38 @@ void intersection_ennemi_ennemi(){
 }
 void mur_ennemi(){
   int i;
-  /* mur apparition */
+  /* mur apparition des ennemis */
   glBegin(GL_LINES);
+  
   glColor4f(0,1,1,1);
   for(i=0; i<LARGEUR_MAP; i=i+10){
     glVertex3f(i,0,0);
     glVertex3f(i,0,300);
   }
-    glVertex3f(0,0,barre_mur);
-    glVertex3f(LARGEUR_MAP,0,barre_mur);
-    barre_mur++;
-    barre_mur= barre_mur%300;
+  glVertex3f(0,0,barre_mur);
+  glVertex3f(LARGEUR_MAP,0,barre_mur);
+  barre_mur++;
+  barre_mur= barre_mur%300;
 
+  glEnd();
 
+  /* mur de brouillard de disparition des ennemis */
+  glColor4f(0.1,0.1,0.2,0.5);
+  glBegin(GL_QUADS);
   
-    glEnd();
-    
-    glColor4f(0.1,0.1,0.2,0.5);
-    glBegin(GL_QUADS);
-    glVertex3f(0,LONGUEUR_MAP,0);
-    glVertex3f(LARGEUR_MAP,LONGUEUR_MAP,0);
+  glVertex3f(0,LONGUEUR_MAP,0);
+  glVertex3f(LARGEUR_MAP,LONGUEUR_MAP,0);
       
-    glVertex3f(LARGEUR_MAP,LONGUEUR_MAP,300);
-    glVertex3f(0,LONGUEUR_MAP,300);
+  glVertex3f(LARGEUR_MAP,LONGUEUR_MAP,300);
+  glVertex3f(0,LONGUEUR_MAP,300);
 
-    glEnd();
-  
-
-    /* mur disparition */
-  
-
-  
+  glEnd();
 }
 void start_anim(){
   
   if (start_ajout_x<=LARGEUR_MAP/2){
-
+    /* Zone jaune de lancement du jeu */
+    glColor4f(1,1,0,0.7);
     glBegin(GL_QUADS);
     glVertex3f(LARGEUR_MAP/2-20-start_ajout_x,LONGUEUR_MAP/2-20-start_ajout_y,-100);
     glVertex3f(LARGEUR_MAP/2-20-start_ajout_x,LONGUEUR_MAP/2+20+start_ajout_y,-100);
@@ -282,31 +281,30 @@ void start_anim(){
 
     glEnd();
     if (start==1){
-  if (first_pass){
-    vie= VIE_MAX;
-    mun = MUN_MAX;
-    score=0;
-    first_pass = 0;
-  }
+      if (first_pass){
+	// Initialisation
+	vie= VIE_MAX;
+	mun = MUN_MAX;
+	score=0;
+	first_pass = 0;
+      }
+      // On aggrandit la zone jaune
       start_ajout_x+=((float)LARGEUR_MAP/(float)LONGUEUR_MAP)*5;
       start_ajout_y+=((float)LONGUEUR_MAP/(float)LARGEUR_MAP)*5;
     }
   }
   else{
     start=2;
-
+    // rouge!= <=> fin du jeu
     if (rouge==0){
       
       mur_ennemi();
+      // On cree un ennemi si possible
       ennemis(init_float3(rand()%LARGEUR_MAP,0,150+rand()%150));
-
+      // On applique la recuperation des munitions
       intersection_munition();
 
-
     }
-    //active collision
-    //active le jeu
-
 
   }
 }
@@ -338,8 +336,6 @@ void aplanir(){
   int max_j=LONGUEUR_MAP;
   for ( i = 0 ; i < max_i ; i++){
     for ( j = 0 ; j < max_j ; j++){
-      //printf("jii\n");
-      //printf("%f",tab_decors[(i-1)%max_i][(j-1)%max_j]);
       g=i-1;
       d=i+1;
       h=j-1;
@@ -351,7 +347,6 @@ void aplanir(){
       if (d>=max_i) d = 0;
       if (h<0) h = max_j-1;
       if (b>=max_j) b = 0;
-      //      printf("%d %d %d %d %d %d \n",h,c,b,g,m,d);
       tab_decors[i][j]=(tab_decors[g][h]+
 			tab_decors[m][h]+
 			tab_decors[d][h]+
@@ -363,25 +358,28 @@ void aplanir(){
 		        
     }
   }
-  // printf("%d %d %f\n ",i,j,tab_decors[i][j]);
   
 }
 
 
 
 void init_arbres(){
-  /* 200 arbres random, 30 bosquets de 1+9 arbres */
+  /* 200 arbres random, 30 bosquets de 1+9 arbres pour 500 arbres */
   
   int i,j;
+  /* Arbres random */
   for(i=0; i<ARBRE_R; i++){
     tab_arbre[i].x=rand()%(LARGEUR_MAP-20)+10;
     tab_arbre[i].y=rand()%(LONGUEUR_MAP-20)+10;
     tab_arbre[i].z=1; /* TYPE = ARBRE, on utilise tab_decors pour la hauteur*/
     scale_arbre[i]=(float)(rand()%20)/(float)10;
-
   }
+  
   int indice=ARBRE_R;
+
+  /* Bosquets autour d'un arbre */
   for(i=0; i<NB_BOSQUET; i++){
+    // arbre central
     int randx=rand()%(LARGEUR_MAP-10)+5;
     int randy=rand()%(LONGUEUR_MAP-10)+5;
     tab_arbre[indice].x=randx;
@@ -390,6 +388,7 @@ void init_arbres(){
     scale_arbre[indice]=(float)(rand()%20)/(float)10;
     indice++;
     for(j=0;j<((NB_ARBRES-ARBRE_R)/NB_BOSQUET)-1;j++){
+      // arbres du bosquet
       int signe=rand()%2-1;
       if (signe==0) signe=1;
       tab_arbre[indice].x=clamp_min_max(randx+signe*rand()%30,10,LARGEUR_MAP-10);
@@ -400,13 +399,13 @@ void init_arbres(){
       scale_arbre[indice]=(float)(rand()%20)/(float)10;
       indice++;
     }
-    
   }
-  
 }
 
 
 void init_lait(){
+  /* lait <=> munitions */
+  /* On les initialise un minimum de maniere centree sur la map */
   int centreX = LARGEUR_MAP / 4;
   int centreY = LONGUEUR_MAP / 4;
   int i;
@@ -421,11 +420,13 @@ void dessin_lait(){
   if (rouge!=0) return;
   for(i=0; i<NB_MUNITIONS; i++){
     if (tab_lait[i][0]==-1){
+      /* Si une case vide: nouvelle munition ailleurs */
       int centreX = LARGEUR_MAP / 4;
       int centreY = LONGUEUR_MAP / 4;
       tab_lait[i][0]=rand()%(LARGEUR_MAP-centreX)+centreX/2;
       tab_lait[i][1]=rand()%(LONGUEUR_MAP-centreY)+centreY/2;
     }
+    /* On affiche la munition */
     glPushMatrix();
     glTranslatef(tab_lait[i][0],tab_lait[i][1],tab_decors[(int)tab_lait[i][0]][(int)tab_lait[i][1]]);
     glScalef(2,2,2);
@@ -435,8 +436,9 @@ void dessin_lait(){
 }
 
 void dessin_arbre(){
+  /* Fonction inutile, remplacee par le 8arbre */
   int i;
-  for(i=0; i<250; i++){
+  for(i=0; i<NB_ARBRES; i++){
     glPushMatrix();
     glTranslatef(tab_arbre[i].x,tab_arbre[i].y,tab_decors[(int)tab_arbre[i].x][(int)tab_arbre[i].y]);
     glScalef(3,3,3);
@@ -447,16 +449,13 @@ void dessin_arbre(){
 
 
 void dessin_grille(){
+  /* Fonction dessinant le sol (et les nuages) */
   int bS_Larg=LARGEUR_MAP;
   int bS_Long=LONGUEUR_MAP;
   float c;
   int pas = 2;
   int p;
   int i,j;
-  //  t=0;
-  //  glColor3f(0.2,0.7 ,0.45 );
-  //  for (int i = borne; i < -borne; i++ ){
-  //afficher_axes();
 
   //Animation nuages
   p=rand()%100;
@@ -473,14 +472,9 @@ void dessin_grille(){
     for ( i = 0; i < bS_Larg-pas; i+=pas ){
 
       // changement couleurs( nuages )
-
-      //printf("(i+nuages)%(LARGEUR_MAP-1): %d  \n",(i+nuages)%(LARGEUR_MAP-1));
-      // printf("(j+nuages)%(LONGUEUR_MAP-1) : %d\n",(j+nuages)%(LONGUEUR_MAP-1));
       
       c = mapFloat(tab_decors[(i+nuages)%(LARGEUR_MAP-1)][(j+nuages)%(LONGUEUR_MAP-1)],0,200,0,1);
       glColor3f(c,c,c);
-      // glColor3f(.5,.5,.5);
-
 
       glVertex3f(i, j, tab_decors[i][j]);
       glVertex3f(i, j+pas, tab_decors[i][j+pas]);
@@ -489,26 +483,18 @@ void dessin_grille(){
       // changement couleurs (nuages )
       c = mapFloat(tab_decors[(i+nuages)%(LARGEUR_MAP-1)][(j+nuages)%(LONGUEUR_MAP-1)],0,200,0,1);
       glColor3f(c,c,c);
-      //  glColor3f(.8,.8,.8);
       
       glVertex3f(i, j+pas, tab_decors[i][j+pas]);
       glVertex3f(i+pas, j, tab_decors[i+pas][j]);
       glVertex3f(i+pas, j+pas, tab_decors[i+pas][j+pas] );
-
       
     }
     glEnd();
-    /*
-      for ( i =borneInf; i < borneSup; i+=pas ){
-
-      dessin_carton_lait(i,j,10,.5);
-      }*/
   }
-
-  // afficher_axes();
 }
 
 void projectile(float3 direction, float3 f){
+  /* 'Cree' un projectile f avec la direction associee dans le tableau (si possible) */
   int i;
   float3 m1;
   float3 m2;
@@ -517,7 +503,6 @@ void projectile(float3 direction, float3 f){
 
   cote_projectile*=-1;
   for( i=0;i<50;i++){
-    
     if (tab_proj[i][0].x==-5000){
       tab_proj[i][0]=direction;
       tab_proj[i][1]=m1;
@@ -528,15 +513,12 @@ void projectile(float3 direction, float3 f){
 }
 
 
-
 void gestion_input(){
+  /* Gere les entrees claviers grace aux variables inputs key_X */
+  
   if (dans_vaisseau){ // Input quand on est dans le vaiseau
     if (key_s == 1) {
-      /*
-	V_POS.z-=V_DIR.z;
-	V_POS.x-=V_DIR.x;
-	V_POS.y-=V_DIR.y;
-      */
+      
       S_VIT--;
       if (COL_DET == 0) {
 	if (S_VIT < VIT_MIN ) {
@@ -550,14 +532,7 @@ void gestion_input(){
       }
     }
     if (key_z == 1){
- 
-      // MAJ DU CUBE
-
-      /*
-	V_POS.x+=V_DIR.x;
-	V_POS.z+=V_DIR.z;
-	V_POS.y+=V_DIR.y;
-      */
+      
       S_VIT++;
       if (COL_DET == 1 )
 	S_VIT -= .5;
@@ -642,32 +617,12 @@ void gestion_input(){
   glutPostRedisplay();
 }
 
-void affichage_pt(float3 p1){
-  printf("point: x=%f y=%f z=%f\n",p1.x,p1.y,p1.z);
-}
 
 void affichage(){
+  /* Fonction d'affichage principale */
   int i;
-  int val = 0;
-
-  /*
-    angle_tangage=angle_tangage+0.2;
-    if (abs(angle_tangage)>=360)
-    angle_tangage=0;
 
 
-    angle=angle+0.2;
-    
-    if (abs(angle)>=360)
-    angle=0;
-  */
-
-  // Detection des collisions basique
-  /*
-    if((p1.z+p2.z)/2<=tab_decors[(int)(p1.x+p2.x)/2][(int)(p1.y+p2.y)/2])
-    printf("x:%f y:%f z:%f\n",(p1.x+p2.x)/2,(p1.y+p2.y)/2,(p1.z+p2.z)/2);
-    else printf("\n");
-  */
   diff_pos_pos_p.x=V_POS.x-V_POS_P.x;
   diff_pos_pos_p.y=V_POS.y-V_POS_P.y;
   diff_pos_pos_p.z=V_POS.z-V_POS_P.z;
@@ -681,11 +636,7 @@ void affichage(){
   
   gestion_input();
 
-  // float3 centre_cube=milieu_cube(p1,p2);
-
   glClearColor(0.1+rouge,0.1,0.2,0.2);
-
-  
   glMatrixMode(GL_MODELVIEW);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glLoadIdentity();
@@ -715,24 +666,15 @@ void affichage(){
 
   */
 
-  
   glFrustum(-24,24,-13,13,20,1000);
-  //gluPerspective(100,1,0.1,1000);
 
-
-  
+  // On verifie si on a pas perdu
   fin();
+  
   if (!auto_scroll_toggle)
-    {
-      //       printf("vit : %f \n",mul_float3(V_DIR,S_VIT).z);
-      /* if (COL_DET == 0) {
-	if (S_VIT < VIT_MIN ) {
-	  S_VIT = VIT_MIN;
-	}
-	}*/
-  V_POS = f3_add_f3(V_POS,mul_float3(V_DIR,S_VIT));
+      V_POS = f3_add_f3(V_POS,mul_float3(V_DIR,S_VIT));
 
-    }
+  // 'Copie' pour le lookat hors du vaisseau
   if (dans_vaisseau) {
     V_POS_P.x = V_POS.x;
     V_POS_P.y = V_POS.y;
@@ -755,7 +697,6 @@ void affichage(){
   V_OBJ_CAM.y = V_POS_P.y;
   V_OBJ_CAM.z = V_POS_P.z;
 
-    
   V_EYE.x=V_POS_P.x-30*V_DIR_P.x +  V_UP_P.x*8;
   V_EYE.y=V_POS_P.y-30*V_DIR_P.y +  V_UP_P.y*8;
   V_EYE.z=V_POS_P.z-30*V_DIR_P.z +  V_UP_P.z*8;
@@ -763,7 +704,7 @@ void affichage(){
 
   /* Gestion des collisions de l'oeil avec le sol*/
    
- if (V_EYE.x > 0 && V_EYE.y > 0 && V_EYE.y < LONGUEUR_MAP && V_EYE.x < LARGEUR_MAP){ // On est bien à l'intérieur de la map
+  if (V_EYE.x > 0 && V_EYE.y > 0 && V_EYE.y < LONGUEUR_MAP && V_EYE.x < LARGEUR_MAP){ // On est bien à l'intérieur de la map
     if (V_EYE.z <=tab_decors[(int)V_EYE.x][(int)V_EYE.y]+1) { // On est au niveau du sol ( ou en-dessous!)
       /* Traitement en cas de collision avec le sol :*/
       V_EYE.z=tab_decors[(int)V_EYE.x][(int)V_EYE.y];
@@ -781,17 +722,17 @@ void affichage(){
 	    V_UP.z
 	    );
 
+  /* Actuallisation et collision des projectiles */
   for( i=0; i<50; i++){
-    /* Methode patarasse */
     if(tab_proj[i][0].x!=-5000){
       if (distance_point(tab_proj[i][1],V_POS)>1000){
+	// Si il est trop loin il disparait
 	tab_proj[i][0].x=-5000;
       }
       else{
 	
 	if(intersection_proj_ennemi(tab_proj[i])==1){
 	  tab_proj[i][0].x=-5000;
-	  //fprintf(stderr,"JINTERSEQUTE\n");
 	  if(rouge==0) score++;
 	}
 	else{
@@ -804,59 +745,37 @@ void affichage(){
 	  tab_proj[i][2].z+=5*tab_proj[i][0].z;
 
 	  affiche_cube_plein(tab_proj[i][1],tab_proj[i][2],1);
+	  // Gravite artificielle
 	  tab_proj[i][0].z-=0.01;
 	}
       }
     }
   }
 
-  
+  /* Affichage et mise a jour des ennemis */
   for( i=0; i<NB_ENNEMIS; i++){
-    /* Methode patarasse */
     if(tab_ennemi[i].y!=-1){
       if (tab_ennemi[i].y>=LONGUEUR_MAP+100 || tab_ennemi[i].z<0){
+	// Si trop loin, il disparait 
 	tab_ennemi[i].y=-1;
       }
       else{
+	// On le fait avancer
 	tab_ennemi[i].y+=tab_chute_ennemi[i][2];
 	glPushMatrix();
-	if(tab_chute_ennemi[i][0]==1){
+	if(tab_chute_ennemi[i][0]==1){ // Si il chute
 	  tab_ennemi[i].z-=1*((float)tab_chute_ennemi[i][1]/(float)50);
 	  glTranslatef(tab_ennemi[i].x,tab_ennemi[i].y,tab_ennemi[i].z);
 	  glRotatef(-tab_chute_ennemi[i][1],1,0,0);
 	  tab_chute_ennemi[i][1]+=1;
 	  glTranslatef(-tab_ennemi[i].x,-tab_ennemi[i].y,-tab_ennemi[i].z);
-
 	}
-	
 	affiche_cube_plein(init_float3(tab_ennemi[i].x-6*tab_chute_ennemi[i][2],tab_ennemi[i].y-6*tab_chute_ennemi[i][2],tab_ennemi[i].z-6*tab_chute_ennemi[i][2]),init_float3(tab_ennemi[i].x+6*tab_chute_ennemi[i][2],tab_ennemi[i].y+6*tab_chute_ennemi[i][2],tab_ennemi[i].z+6*tab_chute_ennemi[i][2]),1);
 	glPopMatrix();
       }
     }
   }
   
-  
-  /*
-    glColor4f(0,1,1,0.5);
-    glVertex3f( 0,0,0);
-    glVertex3f( 100,0,0);*/
-
-  /*
-    glColor4f(1,0,0.5,0.5);
-  
-    glVertex3f( 0,0,0);
-    glVertex3f(V_90.x*100,V_90.y*100,V_90.z*100);
-  
-    glColor4f(0,1,1,0.5);
-    glVertex3f( 0,0,0);
-    glVertex3f( V_UP.x*100, V_UP.y*100, V_UP.z*100);
-  
-  
-    glColor4f(1,1,0,0.5);
-    glVertex3f( 0,0,0);
-    glVertex3f( V_DIR.x*100, V_DIR.y*100, V_DIR.z*100);
-  */
-
 
   /* Gestion des collisions + gravité joueur */
   if (dans_vaisseau){
@@ -899,18 +818,17 @@ void affichage(){
   
   glBegin(GL_LINES);
     
-  val=0;
   glColor4f(1,0,0,0.5);
-  glVertex3f( V_POS.x-val,V_POS.y-val,V_POS.z-val);
-  glVertex3f( V_POS.x+V_DIR.x*10-val,V_POS.y+V_DIR.y*10-val,V_POS.z+V_DIR.z*10-val);
+  glVertex3f( V_POS.x,V_POS.y,V_POS.z);
+  glVertex3f( V_POS.x+V_DIR.x*10,V_POS.y+V_DIR.y*10,V_POS.z+V_DIR.z*10);
 
   glColor4f(0,1,0,0.5);
   glVertex3f(V_POS.x-V_90.x*5,V_POS.y-V_90.y*5,V_POS.z-V_90.z*5);
   glVertex3f(V_POS.x+V_90.x*5,V_POS.y+V_90.y*5,V_POS.z+V_90.z*5);
 
   glColor4f(0,0,1,0.5);
-  glVertex3f( V_POS.x-val,V_POS.y-val,V_POS.z-val);
-  glVertex3f( V_POS.x+V_UP.x*10-val,V_POS.y+ V_UP.y*10-val,V_POS.z+ V_UP.z*10-val);
+  glVertex3f( V_POS.x,V_POS.y,V_POS.z);
+  glVertex3f( V_POS.x+V_UP.x*10,V_POS.y+ V_UP.y*10,V_POS.z+ V_UP.z*10);
 
   glColor4f(0,1,1,1);
 
@@ -927,51 +845,26 @@ void affichage(){
     }
   }
 
-  
-  /*
-    for(i=0; i<LARGEUR_MAP; i=i+10){
-    glVertex3f(i,0,0);
-    glVertex3f(i,0,300);
-    }
-
-  
-    glVertex3f(0,0,pppp);
-    glVertex3f(LARGEUR_MAP,0,pppp);
-      
-
-    pppp++;
-    pppp= pppp%300;
-  */
   glEnd();
 
 
-  /* on pourra faire fonction generale avec le .z > type */
+  /* Affichage de l'arbre avec le clipping */
+  affiche_karbre_clipping(karbre8,V_POS_P,V_DIR_P,V_UP_P,V_90_P);
 
-  //  affiche_karbre_clipping(karbre8,V_POS,V_DIR,V_UP,V_90);
-    affiche_karbre_clipping(karbre8,V_POS_P,V_DIR_P,V_UP_P,V_90_P);
-  
-  //dessin_arbre();
+  /* Affichage des munitions */
   dessin_lait();
 
-  
-
-  glColor4f(1,1,0,0.7);
-
-  
+  // Verification de depart
   if(V_POS.x>LARGEUR_MAP/2-20 && V_POS.x<LARGEUR_MAP/2+20
      && V_POS.y>LONGUEUR_MAP/2-20 && V_POS.y<LONGUEUR_MAP/2+20 && start==0)
     start=1;
   start_anim();
 
   
-  glEnd();
-
   intersection_ennemi_ennemi();
   dessin_grille();
 
-
-  /* ICIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIiiiiiiiiiiiiiiiiiiiii */
-
+  /* Mise a jour du pt_inters pour la collision avec les troncs */
   if(distance_point(V_POS,pt_inters)>100)
     pt_inters=init_float3(-5000,-5000,-500);
   
@@ -986,7 +879,6 @@ void affichage(){
     
     /* Affichage du score */
     dessin_score(620,750,160,50,score,BLANC,NOIR,BLEU);
-    
     
   }
   glutSwapBuffers();
@@ -1005,8 +897,6 @@ void keyUp (unsigned char key, int x, int y) {
   if (key == 's'){    
     key_s=0;
   }
- 
-
 }
 void keyPressed (unsigned char key, int x, int y) {
   if (key == 'q') {
@@ -1030,7 +920,6 @@ void keyPressed (unsigned char key, int x, int y) {
   if (key == 32){ // touche espace
     if (mun > 0 && dans_vaisseau ){
       projectile(V_DIR,V_POS);
-      //   fprintf(stderr,"VEC: %f %f %f \n",V_DIR.x+cote_projectile,V_DIR.y+cote_projectile,V_DIR.z+cote_projectile);
       mun --;
     }
   }
@@ -1045,13 +934,10 @@ void keyPressed (unsigned char key, int x, int y) {
   }
   if (key==13){ // touche entrée
     int modif=0;
-    //    printf("%f\n",S_VIT);
     if (dans_vaisseau && COL_DET && S_VIT==0.0){
-      //      printf("ça sort !! \n");
       modif=toggle(modif);
     }
     if (!dans_vaisseau && a_portee_vaisseau && !modif){
-      //      printf("ça rentre\n");
       modif=toggle(modif);
     }
 
@@ -1105,9 +991,11 @@ void specialInputUp(int key, int x, int y)
     };
   
 }
+
 void mountain(int i_e, int j_e, int largeur){
   int i,j;
-  // 150 est la hauteur max > probleme des bords
+  
+  // 150 est la hauteur max
   
   for ( i = largeur ; i > 0 ;i-- )
     for ( j = largeur ; j > 0 ;j-- ){
@@ -1127,12 +1015,7 @@ int main(int argc, char**argv){
   //INITIALISATION
   time_t t;
   int i,j;
-  cote_projectile=-5;
-  taille_projectile=1;
-  r_1=r_2=r_3=0;
-  vie=100;
-  mun = 50;
-  score=0;
+  
   srand((unsigned) time(&t));
 
   if ( (tab_decors = malloc (sizeof(float *) * LARGEUR_MAP )) == NULL ) {
@@ -1191,12 +1074,19 @@ int main(int argc, char**argv){
       }
     }
 
+  cote_projectile=-5;
+  taille_projectile=1;
+  vie=100;
+  mun = 50;
+  score=0;
   r_sphere_joueur=5;
   COL_DET=0;
   ARR=0;
   float3 init= init_float3(-5000,-5000,-5000);
   for( i=0;i<50;i++)
     tab_proj[i][0]=init;
+
+  /* Initialisation des key */
   key_q=0;
   key_d=0;
   key_s=0;
@@ -1210,51 +1100,37 @@ int main(int argc, char**argv){
     key_haut=0;
     key_droite=0;
   */
-  V_POS = init_float3(0,0,150);
-  p2 = init_float3(10,10,10);
 
+  /* Initialisation des vecteurs */
+  V_POS = init_float3(0,0,150);
   V_DIR = init_float3(1,0,0);
-  
   V_90 = init_float3(0,1,0);
   V_UP = init_float3(0,0,1);
 
   //  V_90_INIT = V_90;
   V_UP_INIT = V_UP;
   
-  // Initialisation décors
+  /* Initialisation des décors */
   
   nuages=0;
-  fprintf(stderr,"VECT: %f %f %f \n",V_UP.x,V_UP.y,V_UP.z);
-  fprintf(stderr,"VEC90: %f %f %f \n",V_90.x,V_90.y,V_90.z);
-  fprintf(stderr,"VEC: %f %f %f \n",V_DIR.x,V_DIR.y,V_DIR.z);
     
- 
   for ( i = 0 ; i < LARGEUR_MAP ; i++){
     for ( j = 0 ; j < LONGUEUR_MAP ; j++){
       rand_seed=rand()%30+1;
-
       tab_decors[i][j]=mapFloat((rand()/rand_seed)%5,0,5,-10,20);
     }
   }
 
-  /*
-  
-    fprintf(stderr,"TEEEEEEEEEEEEEEEST\n");
-    for ( i = 0 ; i < 1000 ;i++ )
-    tab_decors[i][150] = -50;
-  */
-  
   for ( i =0 ; i<NB_MONTAGNES ; i++)
     mountain(rand()%LARGEUR_MAP,rand()%LONGUEUR_MAP,rand()%150+30);
   
   for (  i = 0 ; i < 28; i++)   aplanir();
 
- 
   init_arbres();
   init_lait();
-  
+
+  /* Construction du 8arbre */
   karbre8=cons_arbre(tab_arbre,scale_arbre,NB_ARBRES,tab_decors);
-  
   
   for (i=0; i<NB_ENNEMIS; i++){
     tab_ennemi[i]=init_float3(-5000,-1,-5000);
@@ -1262,45 +1138,30 @@ int main(int argc, char**argv){
     tab_chute_ennemi[i][1]=0;
   }
   pt_inters=init_float3(-5000,-5000,-5000);
-  /*
-
-    fprintf(stderr,"VECT: %f %f %f \n",V_UP.x,V_UP.y,V_UP.z);
-    fprintf(stderr,"VEC90: %f %f %f \n",V_90.x,V_90.y,V_90.z);
-    fprintf(stderr,"VEC: %f %f %f \n",V_DIR.x,V_DIR.y,V_DIR.z);
-  */
 
   
   glutInit(&argc,argv);
-  //Init affichage
-
   glutInitDisplayMode(GLUT_RGBA|GLUT_SINGLE|GLUT_DEPTH);
-
-  //taille & pos
-  //glutInitWindowSize(800,800); //ou fullscreen
-    // glutInitWindowPosition(50, 50);
-
   glutInitWindowSize(1920,1080);
-
-
-  
   glutCreateWindow("FIGHT MILK");
   glEnable( GL_BLEND );
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
   glEnable(GL_DEPTH_TEST);
 
+  /* Brouillard */
+
   /*
   
-    glEnable(GL_FOG) ;
-    GLfloat fogcolor[4] = {0.1,0.1,0.2,0.2} ;
-    GLint fogmode = GL_EXP ;
-    glFogi (GL_FOG_MODE, fogmode) ;
-    glFogfv(GL_FOG_COLOR, fogcolor) ;
-    glFogf(GL_FOG_DENSITY, 0.005) ;
-    glFogf(GL_FOG_START, 29.0) ;
-    glFogf(GL_FOG_END, 3.0) ;
+  glEnable(GL_FOG) ;
+  GLfloat fogcolor[4] = {0.1,0.1,0.2,0.2} ;
+  GLint fogmode = GL_EXP ;
+  glFogi (GL_FOG_MODE, fogmode) ;
+  glFogfv(GL_FOG_COLOR, fogcolor) ;
+  glFogf(GL_FOG_DENSITY, 0.005) ;
+  glFogf(GL_FOG_START, 29.0) ;
+  glFogf(GL_FOG_END, 3.0) ;
   
   */
-  //glutMouseFunc glutKeyboardFunc
   
   glutKeyboardFunc(keyPressed);
   glutKeyboardUpFunc(keyUp);
@@ -1310,7 +1171,7 @@ int main(int argc, char**argv){
   
   //gestionnaire GLUT
 
-
   glutMainLoop();
+  
   return EXIT_SUCCESS;
 }
