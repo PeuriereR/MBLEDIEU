@@ -252,6 +252,31 @@ void dessin_carton_lait(){
   glVertex3f(x     , y+d_cote, z+haut2);
   
   glEnd();
+  glBegin(GL_TRIANGLES);
+
+
+  // face avant
+
+  /*  
+  couleur(ROUGE);
+  
+  glVertex3f(x+cote, y     , z+haut);
+  
+  glVertex3f(x+cote, y+cote, z+haut);
+  glVertex3f(x+cote, y+d_cote, z+haut2);
+*/
+
+  // face arrière
+  
+  couleur(ROUGE);
+  glVertex3f(x     , y+cote, z+haut);
+  
+  glVertex3f(x     , y     , z+haut);
+  glVertex3f(x, y+d_cote, z+haut2);
+
+  
+  
+  glEnd();
 
 }
 

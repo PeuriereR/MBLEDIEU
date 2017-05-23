@@ -4,8 +4,8 @@
 #include "construction_karbre.h"
 #include "util.h"
 
-#define LARGEUR_MAP 750 // X <==> i 
-#define LONGUEUR_MAP 750 // Y <==> j
+#define LARGEUR_MAP 1000 // X <==> i 
+#define LONGUEUR_MAP 1000 // Y <==> j
 
 #define VIT_MAX 5
 #define VIT_MIN 1
@@ -104,6 +104,51 @@ void ennemis(float3 centre){
   }
 }
 
+
+
+void intersection_munition(){
+  float3 m1_lait;
+  float3 m2_lait;
+  for(int i=0; i<200; i++){
+    m1_lait=init_float3(tab_lait[i][0]-2,tab_lait[i][1]-2,tab_decors[(int)tab_lait[i][0]][(int)tab_lait[i][1]]-2);
+    m2_lait=init_float3(tab_lait[i][0]+2,tab_lait[i][1]+2,tab_decors[(int)tab_lait[i][0]][(int)tab_lait[i][1]]+2);
+    affiche_cube(m1_lait,m2_lait);
+    
+    if (dans_cube(V_POS,m1_lait,m2_lait)
+      || dans_cube(init_float3(V_POS.x+10*V_DIR.x,
+			       V_POS.y+10*V_DIR.y,
+			       V_POS.z+10*V_DIR.z),m1_lait,m2_lait)
+      || dans_cube(init_float3(V_POS.x+10*V_90.x,
+			       V_POS.y+10*V_90.y,
+			       V_POS.z+10*V_90.z),m1_lait,m2_lait)
+      
+      || dans_cube(init_float3(V_POS.x-10*V_90.x,
+			       V_POS.y-10*V_90.y,
+			       V_POS.z-10*V_90.z),m1_lait,m2_lait)
+      
+      || dans_cube(init_float3(V_POS.x+10*V_UP.x,
+			       V_POS.y+10*V_UP.y,
+			       V_POS.z+10*V_UP.z),m1_lait,m2_lait)
+
+	){
+      printf("INTERSLAIT\n");
+      //ICI +MUNITION
+      //FAIRE DISPARAITRE LA MUNITION
+      tab_lait[i][0]=-1;
+      mun=clamp_min_max_f(mun+5,0,50);
+
+    }
+    
+  }
+
+  if (INTERS_TRONC==1){
+    S_VIT=0;
+    INTERS_TRONC=0;
+    vie-=30;
+  }
+
+}
+
 int intersection_proj_ennemi(float3 proj[3]){
   int i;
   for(i=0; i<10; i++){
@@ -137,6 +182,7 @@ void intersection_ennemi_ennemi(){
       V_POS.x-=30*V_DIR.x;
       V_POS.y-=30*V_DIR.y;
       V_POS.z-=30*V_DIR.z;
+      vie-=5;
     }
   }
 }
@@ -333,6 +379,12 @@ void init_lait(){
 void dessin_lait(){
   int i;
   for(i=0; i<200; i++){
+    if (tab_lait[i][0]==-1){
+      int centreX = LARGEUR_MAP / 4;
+      int centreY = LONGUEUR_MAP / 4;
+      tab_lait[i][0]=rand()%(LARGEUR_MAP-centreX)+centreX/2;
+      tab_lait[i][1]=rand()%(LONGUEUR_MAP-centreY)+centreY/2;
+    }
     glPushMatrix();
     glTranslatef(tab_lait[i][0],tab_lait[i][1],tab_decors[(int)tab_lait[i][0]][(int)tab_lait[i][1]]);
     glScalef(2,2,2);
@@ -675,6 +727,8 @@ Frustum en 1920 x 1080 ??
     glVertex3f( 0,0,0);
     glVertex3f( V_DIR.x*100, V_DIR.y*100, V_DIR.z*100);
   */
+
+  intersection_munition();
 
 
   
@@ -1060,8 +1114,8 @@ int main(int argc, char**argv){
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
   glEnable(GL_DEPTH_TEST);
 
-  
   /*
+  
             glEnable(GL_FOG) ;
             GLfloat fogcolor[4] = {0.1,0.1,0.2,0.2} ;
             GLint fogmode = GL_EXP ;
@@ -1070,8 +1124,8 @@ int main(int argc, char**argv){
             glFogf(GL_FOG_DENSITY, 0.005) ;
             glFogf(GL_FOG_START, 29.0) ;
             glFogf(GL_FOG_END, 3.0) ;
+  
   */
-
   //glutMouseFunc glutKeyboardFunc
   
   glutKeyboardFunc(keyPressed);
