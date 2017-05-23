@@ -248,7 +248,7 @@ void affiche_karbre_simple2(karbre k,float3 m1, float3 m2){
 }
 void affiche_karbre_simple(karbre k){
   if (k==NULL){
-    fprintf(stderr,"K NUL\n");
+    //    fprintf(stderr,"K NUL\n");
     return;
   }
     
@@ -417,7 +417,7 @@ void affiche_karbre_clipping2(karbre k,float3 m1, float3 m2, float3 vdir,float3 
 
 void affiche_karbre_clipping(karbre k,float3 centre, float3 vdir,float3 vup, float3 v90){
   if (k==NULL){
-    fprintf(stderr,"K NUL\n");
+    //    fprintf(stderr,"K NUL\n");
     return;
   }
 
